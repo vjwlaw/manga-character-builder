@@ -1,0 +1,15 @@
+{
+  "name": "manga-character-builder",
+  "version": "0.1.0",
+  "description": "Prototype manga character builder powered by Gemini 2.5 Flash Image (Nano Banana)",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Manga Character Builder</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Manga Character Builder</h1>
+      <p class="subtitle">Powered by Nano Banana (Gemini 2.5 Flash Image)</p>
+    </header>
+
+    <main>
+      <section class="controls">
+        <h2>Build Your Character</h2>
+
+        <div class="field">
+          <label>Gender</label>
+          <div class="chips" data-key="gender">
+            <button class="chip active" data-value="male">Male</button>
+            <button class="chip" data-value="female">Female</button>
+            <button class="chip" data-value="neutral">Neutral</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Hair Style</label>
+          <div class="chips" data-key="hairStyle">
+            <button class="chip active" data-value="short spiky">Spiky</button>
+            <button class="chip" data-value="long flowing">Long</button>
+            <button class="chip" data-value="twin tails">Twin Tails</button>
+            <button class="chip" data-value="bowl cut">Bowl</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Hair Color</label>
+          <div class="chips" data-key="hairColor">
+            <button class="chip active" data-value="black">Black</button>
+            <button class="chip" data-value="white">White</button>
+            <button class="chip" data-value="silver">Silver</button>
+            <button class="chip" data-value="red">Red</button>
+            <button class="chip" data-value="blonde">Blonde</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Eye Color</label>
+          <div class="chips" data-key="eyeColor">
+            <button class="chip active" data-value="brown">Brown</button>
+            <button class="chip" data-value="blue">Blue</button>
+            <button class="chip" data-value="red">Red</button>
+            <button class="chip" data-value="violet">Violet</button>
+            <button class="chip" data-value="gold">Gold</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Personality</label>
+          <div class="chips" data-key="personality">
+            <button class="chip active" data-value="calm and stoic">Stoic</button>
+            <button class="chip" data-value="fierce and intense">Fierce</button>
+            <button class="chip" data-value="cheerful and energetic">Cheerful</button>
+            <button class="chip" data-value="mysterious and brooding">Mysterious</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Outfit</label>
+          <div class="chips" data-key="outfit">
+            <button class="chip active" data-value="school uniform">School Uniform</button>
+            <button class="chip" data-value="samurai armor">Samurai</button>
+            <button class="chip" data-value="futuristic battle suit">Battle Suit</button>
+            <button class="chip" data-value="ninja robes">Ninja</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Weapon</label>
+          <div class="chips" data-key="weapon">
+            <button class="chip active" data-value="none">None</button>
+            <button class="chip" data-value="katana">Katana</button>
+            <button class="chip" data-value="magic staff">Staff</button>
+            <button class="chip" data-value="twin daggers">Daggers</button>
+            <button class="chip" data-value="giant hammer">Hammer</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Background</label>
+          <div class="chips" data-key="background">
+            <button class="chip active" data-value="city">City</button>
+            <button class="chip" data-value="cherry blossom forest">Cherry Blossoms</button>
+            <button class="chip" data-value="dark void">Dark Void</button>
+            <button class="chip" data-value="ancient temple">Temple</button>
+          </div>
+        </div>
+
+        <button class="generate-btn" id="generateBtn">Generate Character</button>
+      </section>
+
+      <section class="output">
+        <div class="result-panel" id="resultPanel">
+          <div class="placeholder">
+            <div class="placeholder-icon">⛩️</div>
+            <p>Your character will appear here</p>
+          </div>
+        </div>
+
+        <div class="meta" id="meta" hidden>
+          <div class="latency-badge" id="latencyBadge"></div>
+          <details>
+            <summary>Prompt used</summary>
+            <pre id="promptText"></pre>
+          </details>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
