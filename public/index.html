@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Manga Character Builder</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app">
@@ -48,17 +50,6 @@
         </div>
 
         <div class="field">
-          <label>Eye Color</label>
-          <div class="chips" data-key="eyeColor">
-            <button class="chip active" data-value="brown">Brown</button>
-            <button class="chip" data-value="blue">Blue</button>
-            <button class="chip" data-value="red">Red</button>
-            <button class="chip" data-value="violet">Violet</button>
-            <button class="chip" data-value="gold">Gold</button>
-          </div>
-        </div>
-
-        <div class="field">
           <label>Personality</label>
           <div class="chips" data-key="personality">
             <button class="chip active" data-value="calm and stoic">Stoic</button>
@@ -71,10 +62,12 @@
         <div class="field">
           <label>Outfit</label>
           <div class="chips" data-key="outfit">
-            <button class="chip active" data-value="school uniform">School Uniform</button>
-            <button class="chip" data-value="samurai armor">Samurai</button>
-            <button class="chip" data-value="futuristic battle suit">Battle Suit</button>
-            <button class="chip" data-value="ninja robes">Ninja</button>
+            <button class="chip active" data-value="classic Japanese school uniform, white shirt, dark blazer, tie">School Uniform</button>
+            <button class="chip" data-value="preppy style, blazer, collared shirt, slacks">Preppy</button>
+            <button class="chip" data-value="casual streetwear, hoodie, jeans">Streetwear</button>
+            <button class="chip" data-value="athletic PE uniform, tracksuit">Athletic</button>
+            <button class="chip" data-value="gakuran, traditional Japanese boys school uniform, standing collar jacket">Gakuran</button>
+            <button class="chip" data-value="torn and disheveled school uniform, battle-worn">Battle-Worn</button>
           </div>
         </div>
 
@@ -89,13 +82,20 @@
           </div>
         </div>
 
-        <div class="field">
-          <label>Background</label>
-          <div class="chips" data-key="background">
-            <button class="chip active" data-value="city">City</button>
-            <button class="chip" data-value="cherry blossom forest">Cherry Blossoms</button>
-            <button class="chip" data-value="dark void">Dark Void</button>
-            <button class="chip" data-value="ancient temple">Temple</button>
+        <div class="field face-upload-field">
+          <label>Face Reference <span class="optional">optional</span></label>
+          <div class="face-upload" id="faceUpload">
+            <input type="file" id="faceInput" accept="image/*" hidden />
+            <div class="face-drop-zone" id="faceDropZone">
+              <div class="face-preview" id="facePreview" hidden>
+                <img id="faceThumb" src="" alt="Face reference" />
+                <button class="face-clear" id="faceClear" type="button">✕</button>
+              </div>
+              <div class="face-prompt" id="facePromptText">
+                <span class="upload-icon">📷</span>
+                <span>Upload a photo to map your face onto the character</span>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -111,11 +111,29 @@
         </div>
 
         <div class="meta" id="meta" hidden>
-          <div class="latency-badge" id="latencyBadge"></div>
+          <div class="stat-badges">
+            <div class="latency-badge" id="latencyBadge"></div>
+            <div class="cost-badge" id="costBadge"></div>
+          </div>
+          <button class="next-btn" id="nextBtn">Next Scene →</button>
           <details>
             <summary>Prompt used</summary>
             <pre id="promptText"></pre>
           </details>
+        </div>
+
+        <!-- Panel view -->
+        <div class="panel-view" id="panelView" hidden>
+          <h3 class="panel-title">Scene 1 — Classroom</h3>
+          <div class="result-panel" id="panelPanel">
+            <div class="placeholder"><div class="placeholder-icon">🏫</div><p>Panel generating…</p></div>
+          </div>
+          <div class="meta" id="panelMeta" hidden>
+            <div class="stat-badges">
+              <div class="latency-badge" id="panelLatencyBadge"></div>
+              <div class="cost-badge" id="panelCostBadge"></div>
+            </div>
+          </div>
         </div>
       </section>
     </main>

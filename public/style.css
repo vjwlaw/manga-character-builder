@@ -117,6 +117,74 @@ main {
   font-weight: 600;
 }
 
+/* Face upload */
+.optional {
+  font-weight: 400;
+  font-size: 0.7rem;
+  color: #999;
+  text-transform: none;
+  letter-spacing: 0;
+  margin-left: 0.3rem;
+}
+
+.face-drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  cursor: pointer;
+  transition: border-color 0.15s;
+  position: relative;
+  min-height: 72px;
+  display: flex;
+  align-items: center;
+}
+
+.face-drop-zone:hover { border-color: var(--accent); }
+.face-drop-zone.drag-over { border-color: var(--accent); background: #fff5f5; }
+
+.face-prompt {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #aaa;
+  font-size: 0.82rem;
+}
+
+.upload-icon { font-size: 1.4rem; }
+
+.face-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+}
+
+.face-preview img {
+  width: 56px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid var(--ink);
+}
+
+.face-clear {
+  margin-left: auto;
+  background: none;
+  border: 2px solid #ccc;
+  border-radius: 50%;
+  width: 28px;
+  height: 28px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  font-family: inherit;
+}
+
+.face-clear:hover { border-color: var(--accent); color: var(--accent); }
+
 .generate-btn {
   margin-top: 1.5rem;
   width: 100%;
@@ -171,17 +239,91 @@ main {
 
 .placeholder-icon { font-size: 3rem; margin-bottom: 0.5rem; }
 
-/* Loading spinner */
-.spinner {
-  width: 48px;
-  height: 48px;
-  border: 5px solid #ddd;
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
+/* Loading timer */
+.timer {
+  text-align: center;
+  padding: 1rem;
+  width: 100%;
 }
 
-@keyframes spin { to { transform: rotate(360deg); } }
+.timer-sfx {
+  font-family: 'Zen Dots', monospace;
+  font-size: 1.4rem;
+  color: #ddd;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  min-height: 2rem;
+  animation: sfx-flicker 0.08s infinite alternate;
+}
+
+@keyframes sfx-flicker {
+  from { opacity: 1; }
+  to   { opacity: 0.85; }
+}
+
+.timer-display {
+  font-family: 'Zen Dots', monospace;
+  font-size: 5rem;
+  line-height: 1;
+  letter-spacing: 0.05em;
+  margin: 0.25rem 0;
+  animation: timer-pulse 1s ease-in-out infinite;
+  background: linear-gradient(135deg, var(--accent), #e67e22);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+@keyframes timer-pulse {
+  0%, 100% { transform: scale(1);   opacity: 1; }
+  50%       { transform: scale(1.04); opacity: 0.85; }
+}
+
+.timer-label {
+  font-family: 'Zen Dots', monospace;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #aaa;
+  margin-top: 0.5rem;
+  min-height: 1.2em;
+  transition: opacity 0.4s;
+}
+
+/* Next button */
+.next-btn {
+  display: block;
+  width: 100%;
+  margin-bottom: 0.75rem;
+  padding: 0.7rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: none;
+  border-radius: var(--radius);
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: 'Zen Dots', monospace;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.next-btn:hover    { background: #333; }
+.next-btn:disabled { background: #999; cursor: not-allowed; }
+
+/* Panel view */
+.panel-view {
+  margin-top: 1rem;
+}
+
+.panel-title {
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #555;
+  margin-bottom: 0.5rem;
+  font-family: 'Zen Dots', monospace;
+}
 
 /* Meta */
 .meta {
@@ -192,16 +334,30 @@ main {
   font-size: 0.85rem;
 }
 
-.latency-badge {
+.stat-badges {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.latency-badge,
+.cost-badge {
   display: inline-block;
-  background: var(--ink);
-  color: var(--paper);
   padding: 0.2rem 0.75rem;
   border-radius: 20px;
   font-weight: 700;
   font-size: 0.9rem;
-  margin-bottom: 0.75rem;
   font-family: monospace;
+}
+
+.latency-badge {
+  background: var(--ink);
+  color: var(--paper);
+}
+
+.cost-badge {
+  background: #2e7d32;
+  color: #fff;
 }
 
 details summary {
