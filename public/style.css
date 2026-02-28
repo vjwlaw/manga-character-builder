@@ -46,6 +46,10 @@ header .subtitle {
   margin: 0 auto;
 }
 
+.app.in-adventure {
+  max-width: 1100px;
+}
+
 main {
   display: grid;
   grid-template-columns: 420px 1fr;
@@ -290,7 +294,7 @@ main {
   transition: opacity 0.4s;
 }
 
-/* Next button */
+/* Next / Adventure button */
 .next-btn {
   display: block;
   width: 100%;
@@ -311,20 +315,6 @@ main {
 .next-btn:hover    { background: #333; }
 .next-btn:disabled { background: #999; cursor: not-allowed; }
 
-/* Panel view */
-.panel-view {
-  margin-top: 1rem;
-}
-
-.panel-title {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  color: #555;
-  margin-bottom: 0.5rem;
-  font-family: 'Zen Dots', monospace;
-}
-
 /* Meta */
 .meta {
   background: var(--panel-bg);
@@ -334,46 +324,257 @@ main {
   font-size: 0.85rem;
 }
 
-.stat-badges {
+/* ========================================
+   ADVENTURE MODE
+   ======================================== */
+
+.adventure-mode {
+  padding: 1.5rem 1rem;
+}
+
+.adventure-header {
   display: flex;
-  gap: 0.5rem;
-  margin-bottom: 0.75rem;
-}
-
-.latency-badge,
-.cost-badge {
-  display: inline-block;
-  padding: 0.2rem 0.75rem;
-  border-radius: 20px;
-  font-weight: 700;
-  font-size: 0.9rem;
-  font-family: monospace;
-}
-
-.latency-badge {
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
   background: var(--ink);
   color: var(--paper);
+  border-radius: var(--radius);
+  margin-bottom: 1.5rem;
 }
 
-.cost-badge {
-  background: #2e7d32;
+.character-portrait img {
+  width: 50px;
+  height: 50px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 3px solid var(--paper);
+}
+
+.adventure-title {
+  flex: 1;
+}
+
+.adventure-title h2 {
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-family: 'Zen Dots', monospace;
+}
+
+.restart-btn {
+  padding: 0.5rem 1rem;
+  background: none;
+  border: 2px solid rgba(255,255,255,0.3);
+  border-radius: var(--radius);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  font-family: inherit;
+  color: rgba(255,255,255,0.7);
+  transition: all 0.15s;
+}
+
+.restart-btn:hover {
+  border-color: var(--accent-light);
   color: #fff;
 }
 
-details summary {
-  cursor: pointer;
-  font-weight: 600;
-  color: #555;
+/* Manga strip — vertical list of scene rows */
+.manga-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
-details pre {
-  margin-top: 0.5rem;
-  padding: 0.75rem;
-  background: #f8f8f8;
-  border-radius: 4px;
-  font-size: 0.78rem;
-  line-height: 1.5;
-  white-space: pre-wrap;
-  word-break: break-word;
-  border: 1px solid #eee;
+/* Scene row — panel on left, choices on right */
+.scene-row {
+  display: grid;
+  grid-template-columns: 1fr 280px;
+  gap: 1rem;
+  align-items: start;
+}
+
+/* Panel card */
+.manga-panel-card {
+  border: 4px solid var(--ink);
+  border-radius: var(--radius);
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.manga-panel-card.game-over-card {
+  border-color: var(--accent);
+}
+
+.panel-card-title {
+  padding: 0.6rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #555;
+  font-family: 'Zen Dots', monospace;
+  border-bottom: 3px solid var(--ink);
+  background: var(--paper);
+}
+
+.manga-panel-card.game-over-card .panel-card-title {
+  background: var(--accent);
+  color: #fff;
+  border-bottom-color: var(--accent);
+}
+
+.panel-card-image {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 500px;
+  background: #fff;
+}
+
+.panel-card-image img {
+  width: 100%;
+  display: block;
+}
+
+/* Loading state inside a panel card */
+.panel-card-image .timer {
+  padding: 2rem 1rem;
+}
+
+.panel-card-image .timer-display {
+  font-size: 4rem;
+}
+
+.panel-card-image .timer-sfx {
+  font-size: 1.2rem;
+}
+
+/* Choices sidebar — right of the panel */
+.choices-sidebar {
+  padding: 1.25rem;
+  background: var(--panel-bg);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  position: sticky;
+  top: 1rem;
+}
+
+.choices-label {
+  font-family: 'Zen Dots', monospace;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #555;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.choices {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.choice-btn {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: var(--ink);
+  color: var(--paper);
+  border: 3px solid var(--ink);
+  border-radius: var(--radius);
+  font-size: 0.82rem;
+  font-weight: 700;
+  font-family: 'Zen Dots', monospace;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+  transition: all 0.15s;
+  text-align: center;
+}
+
+.choice-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+.choice-btn:disabled {
+  background: #999;
+  border-color: #999;
+  cursor: not-allowed;
+}
+
+/* Game Over in sidebar */
+.game-over-sidebar {
+  text-align: center;
+}
+
+.game-over-sidebar .game-over-text {
+  font-family: 'Zen Dots', monospace;
+  font-size: 1.8rem;
+  color: var(--accent);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 1rem;
+  animation: game-over-pulse 1s ease-in-out infinite;
+}
+
+@keyframes game-over-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.05); opacity: 0.8; }
+}
+
+/* Game Over area (bottom fallback) */
+.game-over-area {
+  margin-top: 2rem;
+  text-align: center;
+  padding: 2rem;
+}
+
+.restart-btn-large {
+  padding: 0.85rem 2rem;
+  font-size: 0.9rem;
+  background: var(--accent);
+  color: #fff;
+  border: 3px solid var(--accent);
+  border-radius: var(--radius);
+  font-family: 'Zen Dots', monospace;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+
+.restart-btn-large:hover {
+  background: var(--accent-light);
+  border-color: var(--accent-light);
+  color: #fff;
+}
+
+@media (max-width: 800px) {
+  .app.in-adventure {
+    max-width: 100%;
+  }
+
+  .scene-row {
+    grid-template-columns: 1fr;
+  }
+
+  .choices-sidebar {
+    position: static;
+  }
+
+  .choice-btn {
+    font-size: 0.75rem;
+    padding: 0.6rem 0.75rem;
+  }
+
+  .game-over-sidebar .game-over-text {
+    font-size: 1.4rem;
+  }
 }

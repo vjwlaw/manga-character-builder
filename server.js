@@ -49,6 +49,9 @@ app.post('/describe', async (req, res) => {
         { text: 'Describe this person\'s facial features in precise detail — face shape, eyes, nose, jawline, cheekbones, lips, distinctive features — as if briefing a manga artist who needs to draw them accurately. Be concise but specific.' },
         { inlineData: { mimeType: faceImageMimeType, data: faceImageBase64 } },
       ],
+      config: {
+        thinkingLevel: 'low',
+      },
     });
     const description = result.candidates?.[0]?.content?.parts?.find(p => p.text)?.text ?? '';
     console.log(`[describe] done in ${Date.now() - t}ms`);
@@ -74,7 +77,11 @@ app.post('/generate', async (req, res) => {
     const result = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: [{ text: finalPrompt }],
-      config: { responseModalities: ['IMAGE'] },
+      config: {
+        responseModalities: ['IMAGE'],
+        thinkingLevel: 'low',
+        candidateCount: 1,
+      },
     });
 
     const latencyMs = Date.now() - startTime;
@@ -102,31 +109,27 @@ app.post('/generate', async (req, res) => {
   }
 });
 
-// Step 3: Optimized placement in manga panel
+// Step 3: Generate a scene panel with character image and client-provided prompt
 app.post('/panel', async (req, res) => {
-  const { characterImageBase64, characterImageMimeType } = req.body;
+  const { characterImageBase64, characterImageMimeType, prompt: scenePrompt } = req.body;
   const startTime = Date.now();
-  console.log('[panel] generating classroom panel with text rendering...');
+  console.log('[panel] generating scene panel...');
 
-  const prompt =
-    `Manga panel, Demon Slayer style. Place this character in a Japanese classroom, sitting at a desk. ` +
-    `High-contrast ink, screen tones. ` +
-    `Include a clear white thought bubble with the EXACT English text: "I need to go to the bathroom". ` +
-    `Ensure the text is legible and centered in the bubble. No Japanese characters.`;
+  if (!scenePrompt) {
+    return res.status(400).json({ error: 'Missing prompt field.' });
+  }
 
   try {
     const result = await ai.models.generateContent({
       model: 'gemini-2.5-flash-image',
       contents: [
-        { text: prompt },
+        { text: scenePrompt },
         { inlineData: { mimeType: characterImageMimeType, data: characterImageBase64 } },
       ],
       config: {
         responseModalities: ['IMAGE'],
-        mediaResolution: 'low',
         thinkingLevel: 'low',
         candidateCount: 1,
-        aspectRatio: '1:1',
       },
     });
 

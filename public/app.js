@@ -1,4 +1,59 @@
-// Chip selection — one active per group
+// ========================================
+// IMAGE COMPRESSION UTILITIES
+// ========================================
+
+function compressDataUrl(dataUrl, maxSize = 1024, quality = 0.8) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const scale = maxSize / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const out = canvas.toDataURL('image/jpeg', quality);
+      const comma = out.indexOf(',');
+      resolve({ base64: out.slice(comma + 1), mimeType: 'image/jpeg' });
+    };
+    img.src = dataUrl;
+  });
+}
+
+function compressImage(file, maxSize = 1024, quality = 0.8) {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      let w = img.width, h = img.height;
+      if (w > maxSize || h > maxSize) {
+        const scale = maxSize / Math.max(w, h);
+        w = Math.round(w * scale);
+        h = Math.round(h * scale);
+      }
+      canvas.width = w;
+      canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      const dataUrl = canvas.toDataURL('image/jpeg', quality);
+      const comma = dataUrl.indexOf(',');
+      resolve({
+        base64: dataUrl.slice(comma + 1),
+        mimeType: 'image/jpeg',
+        dataUrl,
+      });
+    };
+    img.src = URL.createObjectURL(file);
+  });
+}
+
+// ========================================
+// CHIP SELECTION
+// ========================================
+
 document.querySelectorAll('.chips').forEach((group) => {
   group.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');
@@ -18,8 +73,11 @@ function getAttrs() {
   return attrs;
 }
 
-// Face upload state
-let faceData = null; // { base64, mimeType }
+// ========================================
+// FACE UPLOAD
+// ========================================
+
+let faceData = null;
 
 const faceInput = document.getElementById('faceInput');
 const faceDropZone = document.getElementById('faceDropZone');
@@ -28,34 +86,25 @@ const faceThumb = document.getElementById('faceThumb');
 const facePromptText = document.getElementById('facePromptText');
 const faceClear = document.getElementById('faceClear');
 
-function loadFaceFile(file) {
+async function loadFaceFile(file) {
   if (!file || !file.type.startsWith('image/')) return;
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const dataUrl = e.target.result;
-    const comma = dataUrl.indexOf(',');
-    faceData = {
-      base64: dataUrl.slice(comma + 1),
-      mimeType: file.type,
-    };
-    faceThumb.src = dataUrl;
-    facePreview.hidden = false;
-    facePromptText.hidden = true;
+  const compressed = await compressImage(file, 1024, 0.8);
+  faceData = {
+    base64: compressed.base64,
+    mimeType: compressed.mimeType,
   };
-  reader.readAsDataURL(file);
+  faceThumb.src = compressed.dataUrl;
+  facePreview.hidden = false;
+  facePromptText.hidden = true;
 }
 
-// Click to open file picker
 faceDropZone.addEventListener('click', (e) => {
   if (e.target === faceClear || faceClear.contains(e.target)) return;
   faceInput.click();
 });
 
-faceInput.addEventListener('change', () => {
-  loadFaceFile(faceInput.files[0]);
-});
+faceInput.addEventListener('change', () => { loadFaceFile(faceInput.files[0]); });
 
-// Drag and drop
 faceDropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
   faceDropZone.classList.add('drag-over');
@@ -76,67 +125,64 @@ faceClear.addEventListener('click', (e) => {
   facePromptText.hidden = false;
 });
 
-// Generate
-const btn = document.getElementById('generateBtn');
-const resultPanel = document.getElementById('resultPanel');
-const meta = document.getElementById('meta');
-const latencyBadge = document.getElementById('latencyBadge');
-const costBadge = document.getElementById('costBadge');
-const promptText = document.getElementById('promptText');
-const nextBtn = document.getElementById('nextBtn');
-const panelView = document.getElementById('panelView');
-const panelPanel = document.getElementById('panelPanel');
-const panelMeta = document.getElementById('panelMeta');
-const panelLatencyBadge = document.getElementById('panelLatencyBadge');
-const panelCostBadge = document.getElementById('panelCostBadge');
+// ========================================
+// JAZZY TIMER
+// ========================================
 
-// Holds the last generated character image for panel step
-let lastCharacterImage = null; // { base64, mimeType }
+const sfxWords = ['BZZZT!!', 'WHOOSH!', 'KRAK!!', 'ZAP!!', 'DOOM!!', 'FWOOOM!', 'SLASH!', 'BANG!!'];
+const drawPhrases = ['Summoning ink...', 'Drawing destiny...', 'Channeling chi...', 'Inking shadows...', 'Applying screen tone...', 'Sharpening lines...', 'Awakening character...'];
+const scanPhrases = ['Scanning face...', 'Reading features...', 'Mapping likeness...', 'Analyzing soul...'];
 
-function startJazzyTimer(panel, initialLabel) {
-  const sfxWords = ['BZZZT!!', 'WHOOSH!', 'KRAK!!', 'ZAP!!', 'DOOM!!', 'FWOOOM!', 'SLASH!', 'BANG!!'];
-  const phrases = ['Summoning ink…', 'Drawing destiny…', 'Channeling chi…', 'Inking shadows…', 'Applying screen tone…', 'Composing the scene…', 'Awakening the panel…'];
+function startJazzyTimer(container, initialLabel) {
   let phraseIdx = 0, sfxIdx = 0;
   const timerStart = Date.now();
+  const phrases = drawPhrases;
 
-  panel.innerHTML = `
+  container.innerHTML = `
     <div class="timer">
       <div class="timer-sfx">${sfxWords[0]}</div>
       <div class="timer-display">00:00</div>
-      <div class="timer-label">${initialLabel}</div>
+      <div class="timer-label">${initialLabel || phrases[0]}</div>
     </div>`;
 
   const interval = setInterval(() => {
     const elapsed = Math.floor((Date.now() - timerStart) / 1000);
     const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
     const s = String(elapsed % 60).padStart(2, '0');
-    const display = panel.querySelector('.timer-display');
+    const display = container.querySelector('.timer-display');
     if (display) display.textContent = `${m}:${s}`;
     if (elapsed % 2 === 0) {
-      const sfxEl = panel.querySelector('.timer-sfx');
+      const sfxEl = container.querySelector('.timer-sfx');
       if (sfxEl) sfxEl.textContent = sfxWords[sfxIdx++ % sfxWords.length];
     }
     if (elapsed % 4 === 0 && elapsed > 0) {
       phraseIdx++;
-      const labelEl = panel.querySelector('.timer-label');
+      const labelEl = container.querySelector('.timer-label');
       if (labelEl) labelEl.textContent = phrases[phraseIdx % phrases.length];
     }
   }, 500);
 
-  return { interval, timerStart };
+  return interval;
 }
+
+// ========================================
+// CHARACTER GENERATION (Creator Mode)
+// ========================================
+
+const btn = document.getElementById('generateBtn');
+const resultPanel = document.getElementById('resultPanel');
+const meta = document.getElementById('meta');
+const adventureBtn = document.getElementById('adventureBtn');
+
+let lastCharacterImage = null;
+let characterPortraitDataUrl = null;
 
 btn.addEventListener('click', async () => {
   btn.disabled = true;
-  btn.textContent = 'Generating…';
+  btn.textContent = 'Generating...';
   meta.hidden = true;
-  panelView.hidden = true;
   lastCharacterImage = null;
 
-  // Start jazzy timer for face scan phase
-  const sfxWords = ['BZZZT!!', 'WHOOSH!', 'KRAK!!', 'ZAP!!', 'DOOM!!', 'FWOOOM!', 'SLASH!', 'BANG!!'];
-  const scanPhrases = ['Scanning face…', 'Reading features…', 'Mapping likeness…', 'Analyzing soul…'];
-  const drawPhrases = ['Summoning ink…', 'Drawing destiny…', 'Channeling chi…', 'Inking shadows…', 'Applying screen tone…', 'Sharpening lines…', 'Awakening character…'];
   let currentPhrases = faceData ? scanPhrases : drawPhrases;
   let phraseIdx = 0, sfxIdx = 0;
   const timerStart = Date.now();
@@ -165,12 +211,9 @@ btn.addEventListener('click', async () => {
     }
   }, 500);
 
-  meta.hidden = true;
-
   try {
     let faceDescription = null;
 
-    // Step 1: describe face if uploaded
     if (faceData) {
       const descRes = await fetch('/describe', {
         method: 'POST',
@@ -180,15 +223,10 @@ btn.addEventListener('click', async () => {
       const descData = await descRes.json();
       if (descData.error) throw new Error(descData.error);
       faceDescription = descData.description;
-
-      currentPhrases = drawPhrases;
-      phraseIdx = 0;
-    } else {
       currentPhrases = drawPhrases;
       phraseIdx = 0;
     }
 
-    // Step 2: generate image
     const body = { ...getAttrs() };
     if (faceDescription) body.faceDescription = faceDescription;
 
@@ -209,14 +247,10 @@ btn.addEventListener('click', async () => {
       resultPanel.innerHTML = '';
       resultPanel.appendChild(img);
 
-      // Store character image for panel step
-      const comma = data.image.indexOf(',');
-      const mime = data.image.slice(5, data.image.indexOf(';'));
-      lastCharacterImage = { base64: data.image.slice(comma + 1), mimeType: mime };
+      const compImg = await compressDataUrl(data.image, 1024, 0.8);
+      lastCharacterImage = { base64: compImg.base64, mimeType: compImg.mimeType };
+      characterPortraitDataUrl = data.image;
 
-      latencyBadge.textContent = `${data.latencyMs.toLocaleString()} ms`;
-      costBadge.textContent = `$${data.costUsd.toFixed(4)}`;
-      promptText.textContent = data.prompt;
       meta.hidden = false;
     }
   } catch (err) {
@@ -228,16 +262,84 @@ btn.addEventListener('click', async () => {
   }
 });
 
-// Next → panel scene
-nextBtn.addEventListener('click', async () => {
-  if (!lastCharacterImage) return;
+// ========================================
+// ADVENTURE MODE
+// ========================================
 
-  nextBtn.disabled = true;
-  panelView.hidden = false;
-  panelMeta.hidden = true;
-  panelView.scrollIntoView({ behavior: 'smooth', block: 'start' });
+const creatorMode = document.getElementById('creatorMode');
+const adventureMode = document.getElementById('adventureMode');
+const mangaStrip = document.getElementById('mangaStrip');
+const gameOverArea = document.getElementById('gameOverArea');
+const portraitImg = document.getElementById('portraitImg');
+const restartBtn = document.getElementById('restartBtn');
+const gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
 
-  const { interval } = startJazzyTimer(panelPanel, 'Composing scene…');
+let storyData = null;
+
+fetch('/story.json')
+  .then((r) => r.json())
+  .then((data) => { storyData = data; })
+  .catch((err) => console.error('Failed to load story:', err));
+
+adventureBtn.addEventListener('click', () => {
+  if (!lastCharacterImage || !storyData) return;
+  enterAdventureMode();
+});
+
+function enterAdventureMode() {
+  creatorMode.hidden = true;
+  adventureMode.hidden = false;
+  document.querySelector('.app').classList.add('in-adventure');
+  mangaStrip.innerHTML = '';
+  gameOverArea.hidden = true;
+
+  portraitImg.src = characterPortraitDataUrl;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  playScene(storyData.start);
+}
+
+async function playScene(sceneId) {
+  const scene = storyData.scenes[sceneId];
+  if (!scene) {
+    console.error('Scene not found:', sceneId);
+    return;
+  }
+
+  gameOverArea.hidden = true;
+
+  // Create scene row: panel image on left, choices on right
+  const row = document.createElement('div');
+  row.className = 'scene-row' + (scene.gameOver ? ' game-over-row' : '');
+
+  // Panel card (left side)
+  const card = document.createElement('div');
+  card.className = 'manga-panel-card' + (scene.gameOver ? ' game-over-card' : '');
+
+  const title = document.createElement('div');
+  title.className = 'panel-card-title';
+  title.textContent = scene.title;
+  card.appendChild(title);
+
+  const imageContainer = document.createElement('div');
+  imageContainer.className = 'panel-card-image';
+  card.appendChild(imageContainer);
+
+  row.appendChild(card);
+
+  // Choices sidebar (right side) — added after image loads
+  const choicesSidebar = document.createElement('div');
+  choicesSidebar.className = 'choices-sidebar';
+  choicesSidebar.hidden = true;
+  row.appendChild(choicesSidebar);
+
+  mangaStrip.appendChild(row);
+
+  // Scroll to the new row
+  row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // Start loading timer
+  const timerInterval = startJazzyTimer(imageContainer, 'Composing scene...');
 
   try {
     const res = await fetch('/panel', {
@@ -246,28 +348,73 @@ nextBtn.addEventListener('click', async () => {
       body: JSON.stringify({
         characterImageBase64: lastCharacterImage.base64,
         characterImageMimeType: lastCharacterImage.mimeType,
+        prompt: scene.prompt,
       }),
     });
 
     const data = await res.json();
+    clearInterval(timerInterval);
 
     if (data.error) {
-      panelPanel.innerHTML = `<p style="color:red;padding:1rem">Error: ${data.error}</p>`;
-    } else {
-      const img = document.createElement('img');
-      img.src = data.image;
-      img.alt = 'Manga panel';
-      panelPanel.innerHTML = '';
-      panelPanel.appendChild(img);
+      imageContainer.innerHTML = `<p style="color:red;padding:1rem">Error: ${data.error}</p>`;
+      return;
+    }
 
-      panelLatencyBadge.textContent = `${data.latencyMs.toLocaleString()} ms`;
-      panelCostBadge.textContent = `$${data.costUsd.toFixed(4)}`;
-      panelMeta.hidden = false;
+    const img = document.createElement('img');
+    img.src = data.image;
+    img.alt = scene.title;
+    imageContainer.innerHTML = '';
+    imageContainer.appendChild(img);
+
+    row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    if (scene.gameOver) {
+      // Show game over in the sidebar
+      choicesSidebar.innerHTML = `
+        <div class="game-over-sidebar">
+          <h3 class="game-over-text">GAME OVER</h3>
+          <button class="restart-btn restart-btn-large" id="sidebarRestartBtn">Try Again</button>
+        </div>`;
+      choicesSidebar.hidden = false;
+      choicesSidebar.querySelector('#sidebarRestartBtn').addEventListener('click', restart);
+    } else if (scene.choices && scene.choices.length > 0) {
+      // Show choices in the sidebar
+      const label = document.createElement('h3');
+      label.className = 'choices-label';
+      label.textContent = 'What do you do?';
+      choicesSidebar.appendChild(label);
+
+      const choicesDiv = document.createElement('div');
+      choicesDiv.className = 'choices';
+
+      scene.choices.forEach((choice) => {
+        const choiceBtn = document.createElement('button');
+        choiceBtn.className = 'choice-btn';
+        choiceBtn.textContent = choice.label;
+        choiceBtn.addEventListener('click', () => {
+          choicesDiv.querySelectorAll('.choice-btn').forEach((b) => { b.disabled = true; });
+          playScene(choice.next);
+        });
+        choicesDiv.appendChild(choiceBtn);
+      });
+
+      choicesSidebar.appendChild(choicesDiv);
+      choicesSidebar.hidden = false;
     }
   } catch (err) {
-    panelPanel.innerHTML = `<p style="color:red;padding:1rem">Network error: ${err.message}</p>`;
-  } finally {
-    clearInterval(interval);
-    nextBtn.disabled = false;
+    clearInterval(timerInterval);
+    imageContainer.innerHTML = `<p style="color:red;padding:1rem">Network error: ${err.message}</p>`;
   }
-});
+}
+
+function restart() {
+  adventureMode.hidden = true;
+  creatorMode.hidden = false;
+  document.querySelector('.app').classList.remove('in-adventure');
+  mangaStrip.innerHTML = '';
+  gameOverArea.hidden = true;
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+restartBtn.addEventListener('click', restart);
+gameOverRestartBtn.addEventListener('click', restart);

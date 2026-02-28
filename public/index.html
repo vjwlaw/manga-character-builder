@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manga Character Builder</title>
+  <title>Manga Adventure Prototype v1.1</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap" rel="stylesheet">
@@ -11,11 +11,11 @@
 <body>
   <div class="app">
     <header>
-      <h1>Manga Character Builder</h1>
-      <p class="subtitle">Powered by Nano Banana (Gemini 2.5 Flash Image)</p>
+      <h1>Manga Adventure Prototype v1.1</h1>
     </header>
 
-    <main>
+    <!-- CHARACTER CREATION MODE -->
+    <main id="creatorMode">
       <section class="controls">
         <h2>Build Your Character</h2>
 
@@ -111,32 +111,30 @@
         </div>
 
         <div class="meta" id="meta" hidden>
-          <div class="stat-badges">
-            <div class="latency-badge" id="latencyBadge"></div>
-            <div class="cost-badge" id="costBadge"></div>
-          </div>
-          <button class="next-btn" id="nextBtn">Next Scene →</button>
-          <details>
-            <summary>Prompt used</summary>
-            <pre id="promptText"></pre>
-          </details>
-        </div>
-
-        <!-- Panel view -->
-        <div class="panel-view" id="panelView" hidden>
-          <h3 class="panel-title">Scene 1 — Classroom</h3>
-          <div class="result-panel" id="panelPanel">
-            <div class="placeholder"><div class="placeholder-icon">🏫</div><p>Panel generating…</p></div>
-          </div>
-          <div class="meta" id="panelMeta" hidden>
-            <div class="stat-badges">
-              <div class="latency-badge" id="panelLatencyBadge"></div>
-              <div class="cost-badge" id="panelCostBadge"></div>
-            </div>
-          </div>
+          <button class="next-btn" id="adventureBtn">Begin Adventure</button>
         </div>
       </section>
     </main>
+
+    <!-- ADVENTURE MODE -->
+    <div id="adventureMode" class="adventure-mode" hidden>
+      <div class="adventure-header">
+        <div class="character-portrait">
+          <img id="portraitImg" src="" alt="Your character" />
+        </div>
+        <div class="adventure-title">
+          <h2>Your Manga Adventure</h2>
+        </div>
+        <button class="restart-btn" id="restartBtn">Start Over</button>
+      </div>
+
+      <div class="manga-strip" id="mangaStrip"></div>
+
+      <div class="game-over-area" id="gameOverArea" hidden>
+        <h3 class="game-over-text">GAME OVER</h3>
+        <button class="restart-btn restart-btn-large" id="gameOverRestartBtn">Try Again</button>
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>

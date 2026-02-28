@@ -1,0 +1,96 @@
+{
+  "start": "classroom",
+  "scenes": {
+    "classroom": {
+      "title": "Scene 1 \u2014 Classroom",
+      "prompt": "Manga panel, Demon Slayer style. Character sitting at a desk in a crowded Japanese classroom full of other students. Other students are sitting at desks around them, a teacher is at the chalkboard. The main character looks uncomfortable, squirming slightly. High-contrast ink, screen tones. Add a speech bubble from the main character containing the EXACT text: \"I need to go to the bathroom\"",
+      "choices": [
+        { "label": "Go to the bathroom", "next": "hallway" },
+        { "label": "Hold it in", "next": "gameover_holdit" },
+        { "label": "Ditch school for the day", "next": "gameover_ditch" }
+      ]
+    },
+    "gameover_holdit": {
+      "title": "Game Over",
+      "prompt": "Manga panel, comedic style. Character at desk sweating profusely, face bright red, dramatic speed lines radiating outward. Embarrassed expression. Add a speech bubble containing the EXACT text: \"I should have gone...\"",
+      "gameOver": true
+    },
+    "gameover_ditch": {
+      "title": "Game Over",
+      "prompt": "Manga panel, dramatic style. Character caught sneaking out the school gate by a stern teacher blocking the exit. Heavy shadows. Add a speech bubble containing the EXACT text: \"And where do you think you're going?\"",
+      "gameOver": true
+    },
+    "hallway": {
+      "title": "Scene 2 \u2014 The Hallway",
+      "prompt": "Manga panel, Demon Slayer style. Character walking alone down a long empty school hallway with dramatic one-point perspective. Shadows stretch along the floor. Eerie atmosphere. High-contrast ink, screen tones. Add a speech bubble containing the EXACT text: \"Something feels off...\"",
+      "choices": [
+        { "label": "Keep walking", "next": "bathroom_door" },
+        { "label": "Turn back to class", "next": "mysterious_girl" },
+        { "label": "Investigate the strange noise", "next": "gameover_noise" }
+      ]
+    },
+    "mysterious_girl": {
+      "title": "Scene 2B \u2014 The Mysterious Girl",
+      "prompt": "Manga panel, Demon Slayer style. Character turns around in the hallway and a mysterious girl with long dark hair and glowing eyes is standing in the middle of the corridor, blocking the way back. She has an eerie calm smile. Dramatic shadows and backlighting. High-contrast ink, screen tones. Add a speech bubble from the girl containing the EXACT text: \"You can't go back.\"",
+      "choices": [
+        { "label": "Ask her who she is", "next": "girl_warning" },
+        { "label": "Push past her", "next": "gameover_pushpast" },
+        { "label": "Run toward the bathroom", "next": "bathroom_door" }
+      ]
+    },
+    "girl_warning": {
+      "title": "Scene 2C \u2014 A Warning",
+      "prompt": "Manga panel, Demon Slayer style. Close-up of the mysterious girl's face, half in shadow. She looks serious and intense. The hallway behind her is distorted and warped. High-contrast ink. Add a speech bubble containing the EXACT text: \"The door at the end... it chose you.\"",
+      "choices": [
+        { "label": "Go to the bathroom door", "next": "bathroom_door" },
+        { "label": "Refuse and try to leave", "next": "gameover_refuse" }
+      ]
+    },
+    "gameover_pushpast": {
+      "title": "Game Over",
+      "prompt": "Manga panel, horror style. Character tries to push past the mysterious girl but passes right through her like a ghost. Character stumbles and falls, terrified. The girl looks back with a cold expression. Add a speech bubble containing the EXACT text: \"I warned you.\"",
+      "gameOver": true
+    },
+    "gameover_refuse": {
+      "title": "Game Over",
+      "prompt": "Manga panel, horror style. The hallway stretches infinitely in both directions. The character is trapped, walls closing in. The mysterious girl has vanished. Claustrophobic atmosphere. Add a speech bubble containing the EXACT text: \"Where did she go?! Where am I?!\"",
+      "gameOver": true
+    },
+    "gameover_noise": {
+      "title": "Game Over",
+      "prompt": "Manga panel, horror style. Character peering into a dark storage room, eyes wide with fear. A mysterious shadowy figure looms behind them. Add a speech bubble containing the EXACT text: \"I should NOT have looked...\"",
+      "gameOver": true
+    },
+    "bathroom_door": {
+      "title": "Scene 3 \u2014 The Bathroom Door",
+      "prompt": "Manga panel, Demon Slayer style. Character standing in front of a bathroom door at the end of a hallway. The door has a strange glowing aura around it. Dramatic lighting. High-contrast ink. Add a speech bubble containing the EXACT text: \"Why is it glowing...?\"",
+      "choices": [
+        { "label": "Open the door", "next": "portal" },
+        { "label": "Run away", "next": "gameover_runaway" }
+      ]
+    },
+    "gameover_runaway": {
+      "title": "Game Over",
+      "prompt": "Manga panel, action style. Character running down hallway but slips and falls dramatically. Speed lines everywhere. Add a speech bubble containing the EXACT text: \"My legs gave out!\"",
+      "gameOver": true
+    },
+    "portal": {
+      "title": "Scene 4 \u2014 The Portal",
+      "prompt": "Manga panel, epic fantasy style. Character opens bathroom door and is blasted by swirling magical energy. A portal to another world is visible inside. Character's hair and clothes blowing in the wind. Dramatic action lines. Add a speech bubble containing the EXACT text: \"What is this place?!\"",
+      "choices": [
+        { "label": "Step through the portal", "next": "new_world" },
+        { "label": "Try to close the door", "next": "gameover_suckedin" }
+      ]
+    },
+    "gameover_suckedin": {
+      "title": "Game Over",
+      "prompt": "Manga panel, action style. Character trying to close the glowing door but being pulled in by a vortex. Dramatic swirl effects. Add a speech bubble containing the EXACT text: \"It's pulling me in!\"",
+      "gameOver": true
+    },
+    "new_world": {
+      "title": "Scene 5 \u2014 A New World",
+      "prompt": "Manga panel, epic fantasy landscape. Character standing on a cliff overlooking a vast fantasy world with floating islands, a huge moon, and distant castles. Wind blowing through their hair. Awestruck expression. Add a speech bubble containing the EXACT text: \"I'm definitely not in school anymore...\"",
+      "choices": []
+    }
+  }
+}
