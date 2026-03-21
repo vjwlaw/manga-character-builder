@@ -1,9 +1,21 @@
 import 'dotenv/config';
 import express from 'express';
 import { GoogleGenAI } from '@google/genai';
-import { readFileSync, writeFileSync } from 'fs';
+import { readFileSync, writeFileSync, appendFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
+
+function logError(endpoint, message, extra = {}) {
+  const entry = {
+    timestamp: new Date().toISOString(),
+    endpoint,
+    message,
+    ...extra,
+  };
+  const line = JSON.stringify(entry) + '\n';
+  console.error(`[${endpoint}] ${message}`);
+  try { appendFileSync(join(__dirname, 'errors.log'), line); } catch {}
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
@@ -63,7 +75,7 @@ app.post('/describe', async (req, res) => {
     console.log(`[describe] done in ${Date.now() - t}ms`);
     res.json({ description, latencyMs: Date.now() - t });
   } catch (err) {
-    console.error('[describe] ERROR:', err.message);
+    logError('describe', err.message);
     res.status(500).json({ error: err.message });
   }
 });
@@ -98,7 +110,7 @@ app.post('/generate', async (req, res) => {
 
     if (!imagePart) {
       const textPart = candidate?.content?.parts?.find((p) => p.text);
-      console.error('[generate] no image returned. text:', textPart?.text);
+      logError('generate', 'No image returned', { text: textPart?.text });
       return res.status(500).json({ error: 'No image returned — model may have refused.', latencyMs });
     }
 
@@ -110,14 +122,14 @@ app.post('/generate', async (req, res) => {
     });
   } catch (err) {
     const latencyMs = Date.now() - startTime;
-    console.error(`[generate] ERROR after ${latencyMs}ms:`, err.message);
+    logError('generate', err.message, { latencyMs });
     res.status(500).json({ error: err.message, latencyMs });
   }
 });
 
 // Step 3: Generate a scene panel with character image and client-provided prompt
 app.post('/panel', async (req, res) => {
-  const { characterImageBase64, characterImageMimeType, prompt: scenePrompt, personality, secondaryCharacters } = req.body;
+  const { characterImageBase64, characterImageMimeType, prompt: scenePrompt, personality, secondaryCharacters, sceneId, sceneTitle } = req.body;
   const startTime = Date.now();
   console.log('[panel] generating scene panel...');
 
@@ -146,23 +158,31 @@ app.post('/panel', async (req, res) => {
       result = await callPanel();
     } catch (err) {
       if (err.message?.includes('"code":500') || err.message?.includes('INTERNAL')) {
-        console.warn('[panel] 500 from API, retrying once…');
+        logError('panel', '500 from API, retrying once', { sceneId, sceneTitle });
         result = await callPanel();
       } else {
         throw err;
       }
     }
 
+    let candidate = result.candidates?.[0];
+    let imagePart = candidate?.content?.parts?.find((p) => p.inlineData);
+
+    // Retry once on NO_IMAGE (intermittent model refusal)
+    if (!imagePart) {
+      logError('panel', 'no image on first try, retrying', { sceneId, sceneTitle });
+      result = await callPanel();
+      candidate = result.candidates?.[0];
+      imagePart = candidate?.content?.parts?.find((p) => p.inlineData);
+    }
+
     const latencyMs = Date.now() - startTime;
     console.log(`[panel] done in ${latencyMs}ms`);
-
-    const candidate = result.candidates?.[0];
-    const imagePart = candidate?.content?.parts?.find((p) => p.inlineData);
 
     if (!imagePart) {
       const textPart = candidate?.content?.parts?.find((p) => p.text);
       const finishReason = candidate?.finishReason;
-      console.error(`[panel] no image. finishReason=${finishReason} text="${textPart?.text}"`);
+      logError('panel', 'Model refused or failed text render', { sceneId, sceneTitle, finishReason, text: textPart?.text, latencyMs });
       return res.status(500).json({ error: 'Model refused or failed text render.', latencyMs });
     }
 
@@ -172,7 +192,7 @@ app.post('/panel', async (req, res) => {
       costUsd: COST_PER_IMAGE,
     });
   } catch (err) {
-    console.error(`[panel] ERROR:`, err.message);
+    logError('panel', err.message, { sceneId, sceneTitle });
     res.status(500).json({ error: err.message });
   }
 });
@@ -200,7 +220,7 @@ app.post('/api/character/:key/generate', async (req, res) => {
     writeFileSync(CHARS_PATH, JSON.stringify(chars, null, 2));
     console.log(`[chars] generated "${key}"`);
   } catch (err) {
-    console.error('[chars] ERROR:', err.message);
+    logError('chars', err.message);
     res.status(500).json({ error: err.message });
   }
 });

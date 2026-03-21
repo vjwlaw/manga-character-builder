@@ -54,17 +54,40 @@ function compressImage(file, maxSize = 1024, quality = 0.8) {
 // CHIP SELECTION
 // ========================================
 
-document.querySelectorAll('.chips').forEach((group) => {
-  // Randomize initial selection
+document.querySelectorAll('.field').forEach((field) => {
+  const group = field.querySelector('.chips');
+  if (!group) return;
+  const label = field.querySelector('label');
   const chips = [...group.querySelectorAll('.chip')];
+
+  // Randomize initial selection
   chips.forEach(c => c.classList.remove('active'));
   chips[Math.floor(Math.random() * chips.length)].classList.add('active');
 
+  // Show selected value in the label
+  function updateLabel() {
+    const active = group.querySelector('.chip.active');
+    let span = label.querySelector('.selected-label');
+    if (!span) { span = document.createElement('span'); span.className = 'selected-label'; label.appendChild(span); }
+    span.textContent = active ? active.textContent : '';
+  }
+  updateLabel();
+
+  // Accordion toggle
+  label.addEventListener('click', () => {
+    const wasOpen = field.classList.contains('open');
+    document.querySelectorAll('.field.open').forEach(f => f.classList.remove('open'));
+    if (!wasOpen) field.classList.add('open');
+  });
+
+  // Chip selection — pick and auto-close
   group.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
-    group.querySelectorAll('.chip').forEach((c) => c.classList.remove('active'));
+    chips.forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
+    updateLabel();
+    setTimeout(() => field.classList.remove('open'), 200);
   });
 });
 
@@ -231,9 +254,125 @@ const creatorMode = document.getElementById('creatorMode');
 const adventureMode = document.getElementById('adventureMode');
 const mangaStrip = document.getElementById('mangaStrip');
 const gameOverArea = document.getElementById('gameOverArea');
-const portraitImg = document.getElementById('portraitImg');
-const restartBtn = document.getElementById('restartBtn');
 const gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
+const headerPortrait = document.getElementById('headerPortrait');
+const navStartOver = document.getElementById('navStartOver');
+const menuToggle = document.getElementById('menuToggle');
+const headerNav = document.getElementById('headerNav');
+
+let testMode = false;
+let currentSceneId = null;
+const navTestMode = document.getElementById('navTestMode');
+const navReloadStory = document.getElementById('navReloadStory');
+const navJumpScene = document.getElementById('navJumpScene');
+const sceneHistory = [];
+
+// Nav menu toggle
+menuToggle.addEventListener('click', () => headerNav.classList.toggle('open'));
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('#menuToggle') && !e.target.closest('#headerNav')) headerNav.classList.remove('open');
+});
+navStartOver.addEventListener('click', () => { headerNav.classList.remove('open'); restart(); });
+navTestMode.addEventListener('click', () => {
+  testMode = !testMode;
+  navTestMode.textContent = `Test Mode: ${testMode ? 'ON' : 'OFF'}`;
+  navTestMode.style.color = testMode ? '#4ae44a' : '';
+  navReloadStory.hidden = !testMode;
+  navJumpScene.hidden = !testMode;
+  if (testMode) populateJumpScenes();
+  headerNav.classList.remove('open');
+});
+
+function populateJumpScenes() {
+  navJumpScene.innerHTML = '<option value="">Jump to Scene…</option>';
+  if (!storyData?.scenes) return;
+  for (const [key, scene] of Object.entries(storyData.scenes)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = `${scene.title || key}`;
+    navJumpScene.appendChild(opt);
+  }
+}
+
+navJumpScene.addEventListener('change', () => {
+  const sceneId = navJumpScene.value;
+  if (!sceneId || !lastCharacterImage) return;
+  navJumpScene.value = '';
+  headerNav.classList.remove('open');
+  // Clear strip and jump
+  mangaStrip.innerHTML = '';
+  sceneHistory.length = 0;
+  currentSceneId = null;
+  // Enter adventure mode if not already
+  if (adventureMode.hidden) {
+    creatorMode.hidden = true;
+    adventureMode.hidden = false;
+    document.querySelector('.app').classList.add('in-adventure');
+    gameOverArea.hidden = true;
+    headerPortrait.src = characterPortraitDataUrl;
+    headerPortrait.hidden = false;
+    navStartOver.hidden = false;
+  }
+  playScene(sceneId);
+});
+
+// Also refresh jump list when opening the dropdown
+navJumpScene.addEventListener('focus', populateJumpScenes);
+
+navReloadStory.addEventListener('click', async () => {
+  headerNav.classList.remove('open');
+  try {
+    [storyData, charsData] = await Promise.all([
+      fetch('/story.json').then(r => r.json()),
+      fetch('/characters.json').then(r => r.json()),
+    ]);
+  } catch (err) {
+    alert('Failed to reload story: ' + err.message);
+    return;
+  }
+  // Rebuild choices on the current (last) panel
+  if (!currentSceneId || !storyData.scenes[currentSceneId]) return;
+  const scene = storyData.scenes[currentSceneId];
+  const lastRow = mangaStrip.lastElementChild;
+  if (!lastRow) return;
+  const sidebar = lastRow.querySelector('.choices-sidebar');
+  if (!sidebar) return;
+
+  sidebar.innerHTML = '';
+  sidebar.hidden = true;
+
+  if (scene.gameOver) {
+    sidebar.innerHTML = `
+      <div class="game-over-sidebar">
+        <h3 class="game-over-text">GAME OVER</h3>
+        <button class="restart-btn restart-btn-large" id="sidebarRestartBtn">Try Again</button>
+      </div>`;
+    sidebar.hidden = false;
+    sidebar.querySelector('#sidebarRestartBtn').addEventListener('click', restart);
+  } else if (scene.choices && scene.choices.length > 0) {
+    const label = document.createElement('h3');
+    label.className = 'choices-label';
+    label.textContent = 'What do you do?';
+    sidebar.appendChild(label);
+
+    const choicesDiv = document.createElement('div');
+    choicesDiv.className = 'choices';
+    scene.choices.forEach((choice) => {
+      const choiceBtn = document.createElement('button');
+      choiceBtn.className = 'choice-btn';
+      choiceBtn.textContent = choice.label;
+      choiceBtn.addEventListener('click', () => {
+        choicesDiv.querySelectorAll('.choice-btn').forEach((b) => { b.disabled = true; });
+        playScene(choice.next);
+      });
+      choicesDiv.appendChild(choiceBtn);
+    });
+    sidebar.appendChild(choicesDiv);
+    sidebar.hidden = false;
+  }
+  navReloadStory.textContent = 'Reload Story ✓';
+  setTimeout(() => { navReloadStory.textContent = 'Reload Story'; }, 1500);
+});
 
 let storyData = null;
 let charsData = {};
@@ -260,7 +399,9 @@ function enterAdventureMode() {
   mangaStrip.innerHTML = '';
   gameOverArea.hidden = true;
 
-  portraitImg.src = characterPortraitDataUrl;
+  headerPortrait.src = characterPortraitDataUrl;
+  headerPortrait.hidden = false;
+  navStartOver.hidden = false;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 
   playScene(storyData.start);
@@ -274,6 +415,8 @@ async function playScene(sceneId) {
   }
 
   gameOverArea.hidden = true;
+  currentSceneId = sceneId;
+  sceneHistory.push(sceneId);
 
   // Create scene row: panel image on left, choices on right
   const row = document.createElement('div');
@@ -285,11 +428,12 @@ async function playScene(sceneId) {
 
   const title = document.createElement('div');
   title.className = 'panel-card-title';
-  title.textContent = scene.title;
+  title.textContent = '???';
+  title.hidden = true;
   card.appendChild(title);
 
   const imageContainer = document.createElement('div');
-  imageContainer.className = 'panel-card-image';
+  imageContainer.className = 'panel-card-image panel-skeleton';
   card.appendChild(imageContainer);
 
   row.appendChild(card);
@@ -314,6 +458,8 @@ async function playScene(sceneId) {
         body: JSON.stringify({
           characterImageBase64: lastCharacterImage.base64,
           characterImageMimeType: lastCharacterImage.mimeType,
+          sceneId: sceneId,
+          sceneTitle: scene.title,
           prompt: scene.prompt,
           personality: lastCharacterPersonality,
           secondaryCharacters: (scene.characters || [])
@@ -329,16 +475,43 @@ async function playScene(sceneId) {
         return;
       }
       imageContainer.innerHTML = '';
+      imageContainer.classList.remove('panel-skeleton');
       const img = document.createElement('img');
       img.src = data.image;
       img.alt = scene.title;
       imageContainer.appendChild(img);
 
+      // Reveal the title
+      title.textContent = scene.title;
+      title.hidden = false;
+
+      const btnRow = document.createElement('div');
+      btnRow.className = 'panel-btn-row';
+
       const refreshBtn = document.createElement('button');
       refreshBtn.className = 'panel-refresh-btn';
       refreshBtn.textContent = '↺ Regenerate';
       refreshBtn.addEventListener('click', generatePanel);
-      imageContainer.appendChild(refreshBtn);
+      btnRow.appendChild(refreshBtn);
+
+      if (testMode && sceneHistory.length > 1) {
+        const backBtn = document.createElement('button');
+        backBtn.className = 'panel-refresh-btn panel-back-btn';
+        backBtn.textContent = '← Go Back';
+        backBtn.addEventListener('click', () => {
+          row.remove();
+          sceneHistory.pop();
+          currentSceneId = sceneHistory[sceneHistory.length - 1] || null;
+          // Re-enable choices on the previous scene's sidebar
+          const prevRow = mangaStrip.lastElementChild;
+          if (prevRow) {
+            prevRow.querySelectorAll('.choice-btn').forEach(b => { b.disabled = false; });
+          }
+        });
+        btnRow.appendChild(backBtn);
+      }
+
+      imageContainer.appendChild(btnRow);
     } catch (err) {
       clearInterval(timerInterval);
       imageContainer.innerHTML = `<p style="color:red;padding:1rem">Network error: ${err.message}</p>`;
@@ -394,8 +567,11 @@ function restart() {
   document.querySelector('.app').classList.remove('in-adventure');
   mangaStrip.innerHTML = '';
   gameOverArea.hidden = true;
+  sceneHistory.length = 0;
+  currentSceneId = null;
+  headerPortrait.hidden = true;
+  navStartOver.hidden = true;
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-restartBtn.addEventListener('click', restart);
 gameOverRestartBtn.addEventListener('click', restart);

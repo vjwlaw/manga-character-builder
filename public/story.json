@@ -2,11 +2,11 @@
   "start": "classroom",
   "scenes": {
     "classroom": {
-      "title": "ACT I — Scene 1: Something in the Air",
-      "prompt": "Manga panel. The protagonist sits at a school desk gripping the edge tightly. The classroom is normal but a heavy invisible pressure hangs in the air — shown as faint dark tendrils curling at the windows. Other students are oblivious. The protagonist sweats, eyes sharp and alert. High-contrast ink, screen tones. Add a speech bubble from the protagonist containing the EXACT text: \"Something is watching this classroom.\"",
+      "title": "Something's watching you??",
+      "prompt": "The protagonist sits indoors at an appropriate location for their outfit. The protagonist looks nervous and says, \"I feel like something's watching me.\" There is a window nearby.",
       "choices": [
         {
-          "label": "Look under desk",
+          "label": "Do nothing",
           "next": "smurfs_attack"
         },
         {
@@ -17,7 +17,7 @@
     },
     "smurfs_attack": {
       "title": "And the Smurfs Attack",
-      "prompt": "Manga panel, high contrast black and white. The protagonist is swarmed and overwhelmed by dozens of tiny blue-skinned creatures no taller than a hand, wearing white hats and pants, climbing all over them. The protagonist's face is pure horror. Add a speech bubble containing the EXACT text: \"Get me out of here!\"",
+      "prompt": "Manga panel, high contrast black and white. The protagonist is swarmed and overwhelmed by dozens of angry tiny blue-skinned creatures no taller than a hand, wearing white hats and pants, climbing all over them. The protagonist is afraid and is saying: \"AAAAAAAAH!!!!\"",
       "gameOver": true
     },
     "falling": {
@@ -25,7 +25,7 @@
       "prompt": "Manga panel, high contrast, black and white. the protagonist is falling from a window through a white void. The protagonist looks suprised and is saying these exact words: \"What's going on...?\" there is a very small smourf in the bottom left corner, winking and making a thumbs-up. Also, there's a small house floating in the void somewhere.",
       "choices": [
         {
-          "label": "Enter the mysterious floating house",
+          "label": "Knock on the door of the mysterious floating house",
           "next": "house"
         },
         {
@@ -40,19 +40,19 @@
     },
     "house": {
       "title": "You enter the house floating in the void",
-      "prompt": "Manga panel, high contrast, black and white. A friendly-looking old man opens the door of a small cottage floating in the void. He says, \"can I help you?\".",
+      "prompt": "Manga panel, high contrast, black and white. A friendly-looking old man opens the door of a small cottage floating in a white void. He says, \"can I help you?\".",
       "choices": [
         {
-          "label": "Ask the old man about the void",
+          "label": "Ask why outside's just a void",
           "next": "old_man_1"
+        },
+        {
+          "label": "Ask about someone watching you",
+          "next": "old_times2"
         },
         {
           "label": "Say something else",
           "next": "test"
-        },
-        {
-          "label": "Ask about the classroom",
-          "next": "old_times2"
         }
       ],
       "characters": [
@@ -61,18 +61,29 @@
     },
     "old_man_1": {
       "title": "The old man responds",
-      "prompt": "A kindly old man sits on an armchair, drinking a cup of tea (inside the cup is a small smorf). He says this exact text: \"I don't know why outside is only a void. Someone has been stealing reality, I think.\"",
+      "prompt": "A kindly old man sits on an armchair, drinking a cup of tea (inside the cup is a tiny blue-skinned creature no taller than a hand, wearing a white hat and pants). He says this exact text: \"You are the center of this reality. Whatever you do changes your environment.\"\nSuddenly, the phone rings.",
+      "choices": [
+        {
+          "label": "Let the old man answer the phone",
+          "next": "old_answers_phone"
+        },
+        {
+          "label": "Kill everyone",
+          "next": "both_dead"
+        }
+      ],
       "characters": [
         "Old_Man"
-      ]
+      ],
+      "color": "#4ac84a"
     },
     "test": {
       "title": "You say something.",
-      "prompt": "The protagonist is confused because they just fell through a void and felt like something was watching their classroom. So, they stopped by a kindly old man's house to get help. However, instead of asking about the void or the class, they say something else in accordance with their programmed personality.",
+      "prompt": "The protagonist is confused because they just fell through a void. So, they stopped by a kindly old man's house to get help. However, instead of asking about the void or the strange feeling that someone's watching them, they say something else in accordance with their programmed personality. The old man looks slightly confused.",
       "choices": [
         {
-          "label": "Leave and come back",
-          "next": "house"
+          "label": "Break in through the back",
+          "next": "Watch_out!"
         },
         {
           "label": "Wait for his response",
@@ -85,14 +96,14 @@
     },
     "test2": {
       "title": "The old man is confused.",
-      "prompt": "A kindly-looking old man sitting in an armchair in his house says: \"What are you talking about?\" He looks confused. The protagonist has a comically oversized sweat droplet on their head.",
+      "prompt": "A kindly-looking old man sitting in an armchair in his house says: \"What are you talking about? ...Why are you here, again?\" He looks confused. The protagonist has a comically oversized sweat droplet on their head.",
       "choices": [
         {
           "label": "Ask about the void",
           "next": "old_man_1"
         },
         {
-          "label": "Ask about the classroom",
+          "label": "Ask about someone watching you",
           "next": "old_times2"
         }
       ],
@@ -105,15 +116,214 @@
       "prompt": "The protagonist, after just having broken into a house through the window, is now backed into a corner being threatened by the old lady, who's holding a knife. The old lady says, \"Who do you think you are, breaking into our house!\" The protagonist briefly responds according to their personality.",
       "characters": [
         "Old_Lady"
+      ],
+      "choices": [
+        {
+          "label": "Take the old lady's knife and stab her",
+          "next": "old_lady_Death"
+        },
+        {
+          "label": "Apologize and leave",
+          "next": "left_house"
+        }
       ]
     },
     "old_times2": {
       "title": "But he's interrupted!",
-      "prompt": "The old man, sitting in an armchair and drinking tea, says: \"well, you felt there was something wrong with the air in the classroom because--\" However, his speech balloon is interrupted by the old lady, barging into the room, who says, \"Who's this?!\" The protagonist looks surprised.",
+      "prompt": "The old man, sitting in an armchair and drinking tea, says: \"Well, you felt that way because--\" However, his speech balloon is interrupted by the old lady, barging into the room, subtly holding a knife, who says, \"Who's this?!\" The protagonist looks surprised.",
+      "choices": [
+        {
+          "label": "Introduce yourself",
+          "next": "name"
+        },
+        {
+          "label": "Take the old lady's knife and stab her",
+          "next": "old_lady_Death"
+        }
+      ],
       "characters": [
         "Old_Man",
         "Old_Lady"
       ]
+    },
+    "old_lady_Death": {
+      "title": "You stab the old lady",
+      "prompt": "The old man rushes into a room and sees the protagonist holding a knife covered in blood. He looks at the floor and says, \"What have you done?!?!?\"",
+      "characters": [
+        "Old_Man"
+      ],
+      "choices": [
+        {
+          "label": "Stab the old man!!",
+          "next": "both_dead"
+        },
+        {
+          "label": "Leave the house",
+          "next": "apocalypse"
+        }
+      ],
+      "color": "#4ac8c8"
+    },
+    "left_house": {
+      "title": "You're alone on the house's porch.",
+      "prompt": "The protagonist stands on the porch of a house floating in a white void. The protagonist looks confused and has a mostly neutral expression. They say aloud, \"Now what?\"",
+      "choices": [
+        {
+          "label": "Enter the house through the door",
+          "next": "house"
+        }
+      ]
+    },
+    "both_dead": {
+      "title": "Look what you've done.",
+      "prompt": "The protagonist stands in a living room, holding a bloody knife. The bodies of the old man and the old lady are on the floor. The protagonist says, \"Hahahah.... I could do this all day.\"",
+      "choices": [
+        {
+          "label": "Leave the house",
+          "next": "apocalypse"
+        }
+      ],
+      "characters": [
+        "Old_Man",
+        "Old_Lady"
+      ],
+      "color": "#c87a4a"
+    },
+    "name": {
+      "title": "You introduce yourself.",
+      "prompt": "Closeup on the protagonist. The protagonist introduces themself in a way that matches their personality. They also introduce themself with a name that matches their personality. The background is a living room. The old lady makes a mean remark about what the protagonist says.",
+      "choices": [
+        {
+          "label": "Ask the old man why outside's just a void",
+          "next": "old_man_1"
+        },
+        {
+          "label": "Ask for clarification about someone watching you",
+          "next": "smurfs_attack"
+        }
+      ],
+      "characters": [
+        "Old_Lady"
+      ]
+    },
+    "apocalypse": {
+      "title": "The world is burning.",
+      "prompt": "An establishing shot where the protagonist looks small compared to the scene. The protagonist, wielding a knife and covered in blood, steps out of a house only to find that the outside is a fiery apocalypse. Above their head is a text bubble saying, \"?!\"",
+      "choices": [
+        {
+          "label": "Explore the world",
+          "next": "smurfs_attack"
+        }
+      ],
+      "color": "#c87a4a"
+    },
+    "old_answers_phone": {
+      "title": "A mysterious conversation",
+      "prompt": "The old man answers a telephone. He says, \"Yes, they've just arrived. Good timing. .... I will.\" He hangs up the phone.",
+      "characters": [
+        "Old_Man"
+      ],
+      "choices": [
+        {
+          "label": "Proceed",
+          "next": "knife"
+        }
+      ]
+    },
+    "knife": {
+      "title": "The old man's gift",
+      "prompt": "The old man gives the protagonist a magical knife with an elaborate golden hilt and jewels. The old man says, \"It's time for you to take this and defeat the evil controlling this land.\" The protagonist doesn't say anything. They are in a living room.",
+      "choices": [
+        {
+          "label": "Thank him and leave",
+          "next": "journey"
+        },
+        {
+          "label": "Ask about the \"evil\"",
+          "next": "warning"
+        }
+      ],
+      "characters": [
+        "Old_Man"
+      ]
+    },
+    "journey": {
+      "title": "The journey begins",
+      "prompt": "Establishing shot of the protagonist leaving a house and stepping out onto a path winding into the distance. There is a swamp, a castle, and a village visible. The protagonist is thinking, \"The void's gone...\" The protagonist puts a knife with a golden hilt in their pocket.",
+      "choices": [
+        {
+          "label": "Head towards the swamp",
+          "next": "swamp"
+        },
+        {
+          "label": "Head towards the castle",
+          "next": "castle"
+        },
+        {
+          "label": "Head towards the village",
+          "next": "village"
+        },
+        {
+          "label": "Alt to castle",
+          "next": "castle_road"
+        }
+      ]
+    },
+    "warning": {
+      "title": "The old man's warning",
+      "prompt": "The old man says quietly, \"Listen, don't ask anyone about THAT... or THEY'LL attack. I'm warning you.\" He's sitting in a living room. The protagonist is holding an elaborate knife with a golden hilt.",
+      "choices": [
+        {
+          "label": "Thank him and leave",
+          "next": "journey"
+        },
+        {
+          "label": "What do you mean? Who will attack?",
+          "next": "smurfs_attack"
+        }
+      ],
+      "characters": [
+        "Old_Man"
+      ]
+    },
+    "swamp": {
+      "title": "swamp",
+      "prompt": "swamp",
+      "color": "#c84a8a"
+    },
+    "castle": {
+      "title": "On your way to the castle, you hear people behind you",
+      "prompt": "The protagonist, walking on a road, overhears people talking behind them. They're debating financial systems (communism, socialism, etc)."
+    },
+    "village": {
+      "title": "village",
+      "prompt": "village",
+      "color": "#c84a8a"
+    },
+    "castle_road": {
+      "title": "On the road to the castle you hear a noise behind you",
+      "prompt": "The protagonist is on a long road approaching a bridge which is before a castle in the distance. The knife is still in their pocket and they're listening to an noise behind them.",
+      "choices": [
+        {
+          "label": "Hide",
+          "next": "hide_on_castle_road"
+        }
+      ]
+    },
+    "hide_on_castle_road": {
+      "title": "You dive behind a bush",
+      "prompt": "The protagonist hides behind a bush and looks out at three riders on horseback who are on the road talking to each other about various economic systems like capitalism, feudalism and communism. the riders look fancy and well dressed. DO NOT HAVE THE PROTAGONIST LOOK AT THE CAMERA.",
+      "choices": [
+        {
+          "label": "Live the rest of your life behind the bush",
+          "next": "skull"
+        }
+      ]
+    },
+    "skull": {
+      "title": "Great idea.",
+      "prompt": "The skeleton of the protagonist, dead, lays on the ground, surrounded by bushes. Little smourfs are also visible.",
+      "gameOver": true
     }
   }
 }

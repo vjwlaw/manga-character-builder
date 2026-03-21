@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Story Map</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -48,14 +49,14 @@
       position: absolute;
       bottom: 12px;
       left: 12px;
-      font-size: 13px;
+      font-size: 15px;
       color: #555;
       pointer-events: none;
     }
 
     /* ── Side panel ─────────────────────────────────────────── */
     #side-panel {
-      width: 480px;
+      width: 580px;
       background: #0e0e18;
       border-left: 1px solid #222;
       display: flex;
@@ -70,12 +71,12 @@
     }
     .tab-btn {
       flex: 1;
-      padding: 13px;
+      padding: 16px;
       background: none;
       border: none;
       color: #666;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 17px;
       cursor: pointer;
       letter-spacing: 0.05em;
       transition: color 0.15s, background 0.15s;
@@ -87,36 +88,36 @@
     }
     .tab-btn:hover:not(.active) { color: #aaa; }
 
-    #tab-detail, #tab-add {
+    #tab-detail, #tab-add, #tab-chars {
       flex: 1;
       overflow-y: auto;
-      padding: 20px;
+      padding: 24px;
     }
 
     #no-selection {
       color: #444;
-      font-size: 15px;
+      font-size: 18px;
       margin-top: 24px;
       text-align: center;
     }
 
     /* Scene detail */
     .scene-key {
-      font-size: 12px;
+      font-size: 15px;
       color: #666;
       letter-spacing: 0.1em;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .scene-title {
-      font-size: 17px;
+      font-size: 22px;
       font-weight: bold;
       color: #e0e0e0;
-      margin-bottom: 10px;
+      margin-bottom: 12px;
       line-height: 1.4;
     }
     .gameover-badge {
       display: inline-block;
-      font-size: 12px;
+      font-size: 15px;
       background: #3a1010;
       color: #c84a4a;
       border: 1px solid #c84a4a;
@@ -125,37 +126,37 @@
       letter-spacing: 0.1em;
     }
     .section-label {
-      font-size: 12px;
+      font-size: 15px;
       color: #555;
       text-transform: uppercase;
       letter-spacing: 0.12em;
-      margin: 16px 0 8px;
+      margin: 20px 0 10px;
     }
     .prompt-text {
-      font-size: 13px;
+      font-size: 16px;
       color: #aaa;
       line-height: 1.6;
       background: #0a0a14;
-      padding: 12px;
+      padding: 14px;
       border: 1px solid #1e1e3a;
-      max-height: 220px;
+      max-height: 260px;
       overflow-y: auto;
       white-space: pre-wrap;
     }
     .choice-item {
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 8px;
-      font-size: 13px;
+      gap: 10px;
+      margin-bottom: 10px;
+      font-size: 16px;
     }
     .choice-arrow { color: #4a80c8; flex-shrink: 0; }
     .choice-label { color: #ccc; flex: 1; }
     .choice-next {
-      font-size: 11px;
+      font-size: 14px;
       color: #555;
       background: #111;
-      padding: 3px 7px;
+      padding: 4px 9px;
       cursor: pointer;
       border: 1px solid #333;
       white-space: nowrap;
@@ -164,15 +165,15 @@
 
     /* Add scene form */
     .form-group {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
     }
     .form-group label {
       display: block;
-      font-size: 12px;
+      font-size: 15px;
       color: #666;
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 6px;
+      margin-bottom: 8px;
     }
     .form-group input,
     .form-group textarea,
@@ -181,9 +182,9 @@
       background: #0a0a14;
       border: 1px solid #222;
       color: #e0e0e0;
-      padding: 10px 12px;
+      padding: 14px 16px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 17px;
       outline: none;
       transition: border-color 0.15s;
     }
@@ -195,12 +196,12 @@
     .checkbox-row {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
+      gap: 12px;
+      margin-bottom: 20px;
     }
-    .checkbox-row input { width: auto; transform: scale(1.3); }
+    .checkbox-row input { width: auto; transform: scale(1.5); }
     .checkbox-row label {
-      font-size: 14px;
+      font-size: 17px;
       color: #aaa;
       text-transform: none;
       letter-spacing: 0;
@@ -213,14 +214,14 @@
       margin-bottom: 8px;
       align-items: center;
     }
-    .choice-row input { flex: 1; font-size: 13px; }
+    .choice-row input, .choice-row select { flex: 1; font-size: 16px; }
     .remove-choice {
       background: none;
       border: 1px solid #333;
       color: #666;
       cursor: pointer;
-      padding: 6px 10px;
-      font-size: 14px;
+      padding: 8px 12px;
+      font-size: 17px;
       flex-shrink: 0;
     }
     .remove-choice:hover { color: #c84a4a; border-color: #c84a4a; }
@@ -229,9 +230,9 @@
       background: none;
       border: 1px solid #333;
       color: #888;
-      padding: 8px 14px;
+      padding: 10px 18px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 16px;
       cursor: pointer;
       margin-bottom: 16px;
     }
@@ -244,9 +245,9 @@
       background: none;
       border: 1px solid #4a80c8;
       color: #4a80c8;
-      padding: 10px;
+      padding: 14px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 16px;
       cursor: pointer;
       letter-spacing: 0.08em;
       transition: background 0.15s, color 0.15s;
@@ -260,9 +261,9 @@
       background: none;
       border: 1px solid #c84a4a;
       color: #c84a4a;
-      padding: 10px;
+      padding: 14px;
       font-family: inherit;
-      font-size: 13px;
+      font-size: 16px;
       cursor: pointer;
       letter-spacing: 0.08em;
       transition: background 0.15s, color 0.15s;
@@ -283,9 +284,9 @@
       background: #1a2a4a;
       border: 1px solid #4a80c8;
       color: #c0d8ff;
-      padding: 12px;
+      padding: 16px;
       font-family: inherit;
-      font-size: 14px;
+      font-size: 17px;
       cursor: pointer;
       letter-spacing: 0.08em;
       margin-top: 4px;
@@ -301,9 +302,9 @@
     }
 
     #form-status {
-      font-size: 13px;
-      margin-top: 10px;
-      padding: 8px 10px;
+      font-size: 16px;
+      margin-top: 12px;
+      padding: 10px 14px;
       display: none;
     }
     #form-status.success { background: #0a2a0a; color: #4ac84a; border: 1px solid #2a5a2a; }
@@ -318,16 +319,16 @@
       border-bottom: 1px solid #1a1a2a;
     }
     .char-thumb {
-      width: 64px;
-      height: 64px;
+      width: 80px;
+      height: 80px;
       object-fit: cover;
       border: 1px solid #333;
       flex-shrink: 0;
       background: #111;
     }
     .char-thumb-placeholder {
-      width: 64px;
-      height: 64px;
+      width: 80px;
+      height: 80px;
       border: 1px dashed #333;
       flex-shrink: 0;
       display: flex;
@@ -337,16 +338,16 @@
       color: #444;
     }
     .char-info { flex: 1; min-width: 0; }
-    .char-name { font-size: 13px; font-weight: bold; color: #ddd; margin-bottom: 3px; }
-    .char-desc { font-size: 11px; color: #666; margin-bottom: 8px; line-height: 1.4; }
-    .char-actions { display: flex; gap: 6px; }
+    .char-name { font-size: 16px; font-weight: bold; color: #ddd; margin-bottom: 4px; }
+    .char-desc { font-size: 14px; color: #666; margin-bottom: 10px; line-height: 1.4; }
+    .char-actions { display: flex; gap: 8px; }
     .char-actions button {
       background: none;
       border: 1px solid #333;
       color: #777;
       font-family: inherit;
-      font-size: 11px;
-      padding: 3px 8px;
+      font-size: 14px;
+      padding: 5px 12px;
       cursor: pointer;
     }
     .char-actions button:hover { border-color: #4a80c8; color: #4a80c8; }
@@ -403,10 +404,34 @@
     }
 
     .chars-in-scene { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .color-picker-row {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .color-swatch {
+      width: 28px;
+      height: 28px;
+      border: 2px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      padding: 0;
+      font-size: 12px;
+      color: #666;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .color-swatch:hover { transform: scale(1.15); }
+    .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 1px #888; }
+    .color-clear { background: #1a1a2a !important; border: 2px dashed #444; }
+
     .char-scene-toggle {
       font-family: inherit;
-      font-size: 12px;
-      padding: 4px 10px;
+      font-size: 15px;
+      padding: 6px 14px;
       cursor: pointer;
       background: none;
       border: 1px solid #333;
@@ -436,15 +461,15 @@
   <svg id="graph">
     <defs>
       <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
-        markerWidth="5" markerHeight="5" orient="auto">
+        markerWidth="10" markerHeight="10" orient="auto">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a6aaa"/>
       </marker>
       <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
-        markerWidth="5" markerHeight="5" orient="auto">
+        markerWidth="10" markerHeight="10" orient="auto">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a3a3a"/>
       </marker>
       <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
-        markerWidth="5" markerHeight="5" orient="auto">
+        markerWidth="10" markerHeight="10" orient="auto">
         <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
       </marker>
     </defs>
@@ -460,7 +485,7 @@
   <div id="panel-tabs">
     <button class="tab-btn active" onclick="switchTab('detail')">Scene</button>
     <button class="tab-btn" onclick="switchTab('chars')">Characters</button>
-    <button class="tab-btn" onclick="setFormMode('add'); switchTab('add')">+ Add Scene</button>
+    <button class="tab-btn" onclick="resetAddForm(); switchTab('add')">+ Add Scene</button>
   </div>
 
   <div id="tab-detail">
@@ -557,6 +582,14 @@ let charsData   = {};
 let selectedKey = null;
 let positions   = {};
 
+const POSITIONS_KEY = 'storymap_positions';
+function savePositions() {
+  try { localStorage.setItem(POSITIONS_KEY, JSON.stringify(positions)); } catch {}
+}
+function loadPositions() {
+  try { const s = localStorage.getItem(POSITIONS_KEY); if (s) positions = JSON.parse(s); } catch {}
+}
+
 // ── Text wrapping ─────────────────────────────────────────────
 function wrapText(text, maxChars = 26) {
   const words = text.split(' ');
@@ -639,6 +672,7 @@ function computeLayout(story) {
   for (const key of Object.keys(positions)) {
     if (!story.scenes[key]) delete positions[key];
   }
+  savePositions();
 }
 
 // ── Render edges only (called on drag too) ────────────────────
@@ -660,18 +694,53 @@ function renderEdges(story) {
       const color  = isGameover ? '#8a3a3a' : '#2a5a8a';
       const marker = isGameover ? 'url(#arrow-red)' : 'url(#arrow-blue)';
 
-      const x1 = src.x + NODE_W;
-      const y1 = src.y + NODE_H / 2 + (idx - (n - 1) / 2) * 10;
-      const x2 = dst.x;
-      const y2 = dst.y + NODE_H / 2;
+      // Source center and dest center
+      const srcCx = src.x + NODE_W / 2;
+      const srcCy = src.y + NODE_H / 2;
+      const dstCx = dst.x + NODE_W / 2;
+      const dstCy = dst.y + NODE_H / 2;
+      const dx = dstCx - srcCx;
+      const dy = dstCy - srcCy;
+
+      // Pick exit side of source and entry side of dest based on direction
+      let x1, y1, x2, y2;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        // Mostly horizontal
+        if (dx > 0) {
+          x1 = src.x + NODE_W;  y1 = srcCy + (idx - (n - 1) / 2) * 10;
+          x2 = dst.x;           y2 = dstCy;
+        } else {
+          x1 = src.x;           y1 = srcCy + (idx - (n - 1) / 2) * 10;
+          x2 = dst.x + NODE_W;  y2 = dstCy;
+        }
+      } else {
+        // Mostly vertical
+        if (dy > 0) {
+          x1 = srcCx; y1 = src.y + NODE_H;
+          x2 = dstCx; y2 = dst.y;
+        } else {
+          x1 = srcCx; y1 = src.y;
+          x2 = dstCx; y2 = dst.y + NODE_H;
+        }
+      }
+
       const mx = (x1 + x2) / 2;
+      const my = (y1 + y2) / 2;
+
+      // Curve based on direction
+      let path;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        path = `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`;
+      } else {
+        path = `M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`;
+      }
 
       const eg = edgesG.append('g').attr('class', 'edge');
       eg.append('path')
-        .attr('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`)
+        .attr('d', path)
         .attr('stroke', color)
-        .attr('stroke-width', 1.5)
-        .attr('stroke-opacity', 0.55)
+        .attr('stroke-width', 2)
+        .attr('stroke-opacity', 0.6)
         .attr('fill', 'none')
         .attr('marker-end', marker);
       eg.append('title').text(choice.label);
@@ -697,6 +766,7 @@ function renderGraph(story) {
       positions[key].y += event.dy;
       d3.select(this).attr('transform', `translate(${positions[key].x},${positions[key].y})`);
       renderEdges(story);
+      savePositions();
     });
 
   for (const [key, scene] of Object.entries(story.scenes)) {
@@ -715,10 +785,14 @@ function renderGraph(story) {
       .call(drag)
       .on('click', () => selectNode(key));
 
-    node.append('rect')
+    const rect = node.append('rect')
       .attr('width', NODE_W)
       .attr('height', nodeH)
       .attr('rx', 5);
+
+    if (scene.color) {
+      rect.style('fill', scene.color).style('stroke', scene.color).style('fill-opacity', 0.25).style('stroke-opacity', 1);
+    }
 
     // Scene key
     node.append('text')
@@ -829,9 +903,33 @@ function showSceneDetail(key) {
           }).join('')
         : '<span style="color:#444;font-size:11px">No characters defined yet.</span>'}
     </div>
+    <div class="section-label">Node Color</div>
+    <div class="color-picker-row">
+      ${['#4a80c8','#c84a4a','#4ac84a','#c8a04a','#8a4ac8','#c84a8a','#4ac8c8','#c87a4a','#888888'].map(c =>
+        `<button class="color-swatch${scene.color === c ? ' active' : ''}" style="background:${c}" onclick="setSceneColor('${esc(key)}','${c}')"></button>`
+      ).join('')}
+      <button class="color-swatch color-clear${!scene.color ? ' active' : ''}" onclick="setSceneColor('${esc(key)}',null)" title="Default">✕</button>
+    </div>
     <button class="btn-edit" onclick="openEditForm('${esc(key)}')">Edit Scene</button>
     <button class="btn-delete" onclick="deleteScene('${esc(key)}')">Delete Scene</button>
   `;
+}
+
+async function setSceneColor(sceneKey, color) {
+  const scene = { ...storyData.scenes[sceneKey] };
+  if (color) scene.color = color; else delete scene.color;
+  const res = await fetch(`/api/story/scene/${encodeURIComponent(sceneKey)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scene }),
+  });
+  if (!res.ok) { alert((await res.json()).error); return; }
+  storyData.scenes[sceneKey] = scene;
+  renderGraph(storyData);
+  if (selectedKey === sceneKey) {
+    d3.select(`.node[data-key="${sceneKey}"]`).classed('selected', true);
+    showSceneDetail(sceneKey);
+  }
 }
 
 async function toggleCharInScene(sceneKey, charKey) {
@@ -863,6 +961,7 @@ async function deleteScene(key) {
   document.getElementById('scene-info').style.display = 'none';
   document.getElementById('no-selection').style.display = 'block';
   delete positions[key];
+  savePositions();
   await loadAndRender();
   populateParentDropdown(storyData);
 }
@@ -930,6 +1029,17 @@ function openEditForm(key) {
   populateSceneChars(scene.characters || []);
   setFormMode('edit');
   switchTab('add');
+}
+
+function resetAddForm() {
+  setFormMode('add');
+  document.getElementById('add-form').reset();
+  document.getElementById('choices-list').innerHTML = '';
+  document.getElementById('choices-section').style.display = 'block';
+  document.getElementById('f-choice-label-group').style.display = 'none';
+  document.getElementById('form-status').style.display = 'none';
+  populateSceneChars([]);
+  addChoiceRow();
 }
 
 function toggleGameOver() {
@@ -1030,11 +1140,17 @@ async function submitScene(e) {
       document.getElementById('f-choice-label-group').style.display = 'none';
       populateSceneChars([]);
     }
+    const wasEdit = editMode;
+    const editedKey = key;
     setFormMode('add');
 
     // Reload graph
     await loadAndRender();
     populateParentDropdown(storyData);
+
+    if (wasEdit) {
+      selectNode(editedKey);
+    }
   } catch (err) {
     status.textContent = `Error: ${err.message}`;
     status.className = 'error';
@@ -1190,6 +1306,7 @@ async function loadAndRender() {
 }
 
 async function init() {
+  loadPositions();
   await loadAndRender();
   setupZoom();
   populateParentDropdown(storyData);

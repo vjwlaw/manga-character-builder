@@ -3,15 +3,29 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Manga Adventure Prototype v1.1</title>
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <title>Make Your Own Manga Adventure v1.3</title>
   <link rel="stylesheet" href="style.css" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Zen+Dots&display=swap" rel="stylesheet">
 </head>
 <body>
   <div class="app">
-    <header>
-      <h1>Manga Adventure Prototype v1.1</h1>
+    <header id="siteHeader">
+      <div class="header-left">
+        <img id="headerPortrait" class="header-portrait" src="" alt="" hidden>
+        <h1>Make Your Own Manga Adventure v1.3</h1>
+      </div>
+      <button class="menu-toggle" id="menuToggle">☰</button>
+      <nav class="header-nav" id="headerNav">
+        <a href="/story" target="_blank">Story Builder</a>
+        <button id="navTestMode">Test Mode: OFF</button>
+        <button id="navReloadStory" hidden>Reload Story</button>
+        <select id="navJumpScene" hidden>
+          <option value="">Jump to Scene…</option>
+        </select>
+        <button id="navStartOver" hidden>Start Over</button>
+      </nav>
     </header>
 
     <!-- CHARACTER CREATION MODE -->
@@ -41,6 +55,7 @@
             <button class="chip" data-value="short messy bedhead hair with a natural cowlick">Bedhead</button>
             <button class="chip" data-value="slicked-back hair with sharp widow's peak and no loose strands">Slicked Back</button>
             <button class="chip" data-value="voluminous wavy hair cascading down to the waist">Voluminous Waves</button>
+            <button class="chip" data-value="large round afro, voluminous and perfectly spherical natural hair">Afro</button>
             <button class="chip" data-value="completely bald, smooth bare scalp, no hair whatsoever">Bald</button>
             <button class="chip" data-value="closely cropped buzz cut with sharp fade on the sides">Buzz Fade</button>
             <button class="chip" data-value="long hair with heavy straight-cut bangs covering the eyebrows">Hime Cut Bangs</button>
@@ -52,9 +67,7 @@
           <div class="chips" data-key="hairColor">
             <button class="chip active" data-value="black">Black</button>
             <button class="chip" data-value="white">White</button>
-            <button class="chip" data-value="silver">Silver</button>
-            <button class="chip" data-value="red">Red</button>
-            <button class="chip" data-value="blonde">Blonde</button>
+            <button class="chip" data-value="gray">Something Else</button>
           </div>
         </div>
 
@@ -68,7 +81,7 @@
             <button class="chip" data-value="cocky and smug, sharp grin, one eyebrow raised, arms crossed confidently">Smug</button>
             <button class="chip" data-value="cold calculating genius, sharp narrowed eyes, subtle condescending expression">Cold Genius</button>
             <button class="chip" data-value="tsundere, flushed cheeks, scowling with arms crossed but eyes betraying embarrassment">Tsundere</button>
-            <button class="chip" data-value="lovesick yandere, wide obsessive unblinking eyes, sweet smile that doesn't reach the eyes, unsettling stillness">Yandere</button>
+            <button class="chip" data-value="hotheaded and explosive, veins popping on forehead, gritted teeth, fists clenched, leaning forward aggressively">Hotheaded</button>
             <button class="chip" data-value="complete idiot, enormous goofy grin, swirly confused eyes, drooling slightly, one eyebrow raised higher than the other">Idiot</button>
             <button class="chip" data-value="weathered and ancient, deep wrinkles, heavy-lidded wise eyes, slight knowing smile, hunched posture">Old</button>
             <button class="chip" data-value="unhinged and unpredictable, wide mismatched manic eyes, unsettling grin">Unhinged</button>
@@ -80,17 +93,20 @@
           <label>Outfit</label>
           <div class="chips" data-key="outfit">
             <button class="chip active" data-value="classic Japanese school uniform, white collared shirt, dark blazer, tie, dress pants">School Uniform</button>
-            <button class="chip" data-value="gakuran, traditional Japanese boys school uniform, long standing-collar black jacket buttoned to the throat">Gakuran</button>
+            <button class="chip" data-value="full goth outfit, black leather jacket with studs, fishnet sleeves, heavy eyeliner, spiked choker, black combat boots, dark nail polish">Goth</button>
             <button class="chip" data-value="black Soul Reaper hakama robes, wide-leg pants, kimono top, tied with a white sash, barefoot">Soul Reaper</button>
             <button class="chip" data-value="tattered dark hooded cloak over layered wraps, worn leather straps, fingerless gloves">Dark Wanderer</button>
             <button class="chip" data-value="fitted military uniform, high collar, gold epaulettes, double-breasted jacket, polished boots">Military</button>
             <button class="chip" data-value="oversized streetwear hoodie, baggy cargo pants, chunky sneakers, chain accessories">Streetwear</button>
             <button class="chip" data-value="traditional Japanese shrine maiden outfit, white haori top, red hakama skirt, bare feet">Shrine Maiden</button>
-            <button class="chip" data-value="sleeveless athletic compression top, training shorts, sports tape on forearms and knuckles">Fighter Gym</button>
+            <button class="chip" data-value="wearing a ridiculous oversized inflatable T-Rex dinosaur costume, the kind from Halloween, puffy green body with tiny arms, character's face visible through the open mouth">T-Rex</button>
             <button class="chip" data-value="long formal coat over dress shirt and waistcoat, gloves, pocket watch chain">Victorian Coat</button>
             <button class="chip" data-value="torn and shredded school uniform exposing battle wounds, one sleeve missing, collar destroyed">Battle-Worn</button>
             <button class="chip" data-value="sleek all-black bodysuit with subtle armored panels at shoulders and forearms, no insignia">Stealth Ops</button>
             <button class="chip" data-value="loose linen yukata robe, open at the chest, sash loosely tied, wooden sandals">Casual Yukata</button>
+            <button class="chip" data-value="flashy 70s disco outfit, wide-collar open shirt, tight bell-bottom pants, platform shoes, gold chain necklace">Disco</button>
+            <button class="chip" data-value="soft flannel pajamas with a cartoon pattern, loose-fitting top and pants, fuzzy slippers">Pajamas</button>
+            <button class="chip" data-value="a rough burlap potato sack worn as a dress, tied at the waist with rope, barefoot, holes at the arms">Potato Sack</button>
           </div>
         </div>
 
@@ -115,16 +131,6 @@
 
     <!-- ADVENTURE MODE -->
     <div id="adventureMode" class="adventure-mode" hidden>
-      <div class="adventure-header">
-        <div class="character-portrait">
-          <img id="portraitImg" src="" alt="Your character" />
-        </div>
-        <div class="adventure-title">
-          <h2>Your Manga Adventure</h2>
-        </div>
-        <button class="restart-btn" id="restartBtn">Start Over</button>
-      </div>
-
       <div class="manga-strip" id="mangaStrip"></div>
 
       <div class="game-over-area" id="gameOverArea" hidden>

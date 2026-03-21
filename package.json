@@ -1,6 +1,6 @@
 {
   "name": "manga-character-builder",
-  "version": "0.1.0",
+  "version": "1.3.0",
   "description": "Prototype manga character builder powered by Nano Banana 2 (gemini-3.1-flash-image-preview)",
   "type": "module",
   "scripts": {
