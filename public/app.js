@@ -305,40 +305,50 @@ async function playScene(sceneId) {
   // Scroll to the new row
   row.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Start loading timer
-  const timerInterval = startJazzyTimer(imageContainer, 'Composing scene...');
+  async function generatePanel() {
+    const timerInterval = startJazzyTimer(imageContainer, 'Composing scene...');
+    try {
+      const res = await fetch('/panel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          characterImageBase64: lastCharacterImage.base64,
+          characterImageMimeType: lastCharacterImage.mimeType,
+          prompt: scene.prompt,
+          personality: lastCharacterPersonality,
+          secondaryCharacters: (scene.characters || [])
+            .map(key => charsData[key])
+            .filter(c => c?.imageBase64)
+            .map(c => ({ name: c.name, description: c.description, imageBase64: c.imageBase64, imageMimeType: c.imageMimeType })),
+        }),
+      });
+      const data = await res.json();
+      clearInterval(timerInterval);
+      if (data.error) {
+        imageContainer.innerHTML = `<p style="color:red;padding:1rem">Error: ${data.error}</p>`;
+        return;
+      }
+      imageContainer.innerHTML = '';
+      const img = document.createElement('img');
+      img.src = data.image;
+      img.alt = scene.title;
+      imageContainer.appendChild(img);
 
-  try {
-    const res = await fetch('/panel', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        characterImageBase64: lastCharacterImage.base64,
-        characterImageMimeType: lastCharacterImage.mimeType,
-        prompt: scene.prompt,
-        personality: lastCharacterPersonality,
-        secondaryCharacters: (scene.characters || [])
-          .map(key => charsData[key])
-          .filter(c => c?.imageBase64)
-          .map(c => ({ name: c.name, description: c.description, imageBase64: c.imageBase64, imageMimeType: c.imageMimeType })),
-      }),
-    });
-
-    const data = await res.json();
-    clearInterval(timerInterval);
-
-    if (data.error) {
-      imageContainer.innerHTML = `<p style="color:red;padding:1rem">Error: ${data.error}</p>`;
-      return;
+      const refreshBtn = document.createElement('button');
+      refreshBtn.className = 'panel-refresh-btn';
+      refreshBtn.textContent = '↺ Regenerate';
+      refreshBtn.addEventListener('click', generatePanel);
+      imageContainer.appendChild(refreshBtn);
+    } catch (err) {
+      clearInterval(timerInterval);
+      imageContainer.innerHTML = `<p style="color:red;padding:1rem">Network error: ${err.message}</p>`;
     }
-
-    const img = document.createElement('img');
-    img.src = data.image;
-    img.alt = scene.title;
-    imageContainer.innerHTML = '';
-    imageContainer.appendChild(img);
-
     row.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Start first generation
+  try {
+    await generatePanel();
 
     if (scene.gameOver) {
       // Show game over in the sidebar
@@ -374,7 +384,6 @@ async function playScene(sceneId) {
       choicesSidebar.hidden = false;
     }
   } catch (err) {
-    clearInterval(timerInterval);
     imageContainer.innerHTML = `<p style="color:red;padding:1rem">Network error: ${err.message}</p>`;
   }
 }

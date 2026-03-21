@@ -125,23 +125,33 @@ app.post('/panel', async (req, res) => {
     return res.status(400).json({ error: 'Missing prompt field.' });
   }
 
+  const panelContents = [
+    { text: `The protagonist in this scene has the following personality — use this to inform their expression and body language: ${personality}. ${scenePrompt} Manga panel, black and white.` +
+      (secondaryCharacters?.length
+        ? ` IMPORTANT: Multiple character references are attached. Image 1 = the PROTAGONIST. ${secondaryCharacters.map((c, i) => `Image ${i + 2} = ${c.name} (${c.description})`).join('. ')}. Keep every character visually distinct and consistent with their reference image.`
+        : ' Strictly one character only.') },
+    { inlineData: { mimeType: characterImageMimeType, data: characterImageBase64 } },
+    ...(secondaryCharacters || []).map(c => ({ inlineData: { mimeType: c.imageMimeType, data: c.imageBase64 } })),
+  ];
+
+  const callPanel = () => ai.models.generateContent({
+    model: 'gemini-3.1-flash-image-preview',
+    contents: panelContents,
+    config: { responseModalities: ['IMAGE'], thinkingLevel: 'low', candidateCount: 1 },
+  });
+
   try {
-    const result = await ai.models.generateContent({
-      model: 'gemini-3.1-flash-image-preview',
-      contents: [
-        { text: `The protagonist in this scene has the following personality — use this to inform their expression and body language: ${personality}. ${scenePrompt} Manga panel, black and white.` +
-          (secondaryCharacters?.length
-            ? ` IMPORTANT: Multiple character references are attached. Image 1 = the PROTAGONIST. ${secondaryCharacters.map((c, i) => `Image ${i + 2} = ${c.name} (${c.description})`).join('. ')}. Keep every character visually distinct and consistent with their reference image.`
-            : ' Strictly one character only.') },
-        { inlineData: { mimeType: characterImageMimeType, data: characterImageBase64 } },
-        ...(secondaryCharacters || []).map(c => ({ inlineData: { mimeType: c.imageMimeType, data: c.imageBase64 } })),
-      ],
-      config: {
-        responseModalities: ['IMAGE'],
-        thinkingLevel: 'low',
-        candidateCount: 1,
-      },
-    });
+    let result;
+    try {
+      result = await callPanel();
+    } catch (err) {
+      if (err.message?.includes('"code":500') || err.message?.includes('INTERNAL')) {
+        console.warn('[panel] 500 from API, retrying once…');
+        result = await callPanel();
+      } else {
+        throw err;
+      }
+    }
 
     const latencyMs = Date.now() - startTime;
     console.log(`[panel] done in ${latencyMs}ms`);
