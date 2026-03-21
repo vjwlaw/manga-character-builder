@@ -55,6 +55,11 @@ function compressImage(file, maxSize = 1024, quality = 0.8) {
 // ========================================
 
 document.querySelectorAll('.chips').forEach((group) => {
+  // Randomize initial selection
+  const chips = [...group.querySelectorAll('.chip')];
+  chips.forEach(c => c.classList.remove('active'));
+  chips[Math.floor(Math.random() * chips.length)].classList.add('active');
+
   group.addEventListener('click', (e) => {
     const chip = e.target.closest('.chip');
     if (!chip) return;
@@ -78,52 +83,6 @@ function getAttrs() {
 // ========================================
 
 let faceData = null;
-
-const faceInput = document.getElementById('faceInput');
-const faceDropZone = document.getElementById('faceDropZone');
-const facePreview = document.getElementById('facePreview');
-const faceThumb = document.getElementById('faceThumb');
-const facePromptText = document.getElementById('facePromptText');
-const faceClear = document.getElementById('faceClear');
-
-async function loadFaceFile(file) {
-  if (!file || !file.type.startsWith('image/')) return;
-  const compressed = await compressImage(file, 1024, 0.8);
-  faceData = {
-    base64: compressed.base64,
-    mimeType: compressed.mimeType,
-  };
-  faceThumb.src = compressed.dataUrl;
-  facePreview.hidden = false;
-  facePromptText.hidden = true;
-}
-
-faceDropZone.addEventListener('click', (e) => {
-  if (e.target === faceClear || faceClear.contains(e.target)) return;
-  faceInput.click();
-});
-
-faceInput.addEventListener('change', () => { loadFaceFile(faceInput.files[0]); });
-
-faceDropZone.addEventListener('dragover', (e) => {
-  e.preventDefault();
-  faceDropZone.classList.add('drag-over');
-});
-faceDropZone.addEventListener('dragleave', () => faceDropZone.classList.remove('drag-over'));
-faceDropZone.addEventListener('drop', (e) => {
-  e.preventDefault();
-  faceDropZone.classList.remove('drag-over');
-  loadFaceFile(e.dataTransfer.files[0]);
-});
-
-faceClear.addEventListener('click', (e) => {
-  e.stopPropagation();
-  faceData = null;
-  faceInput.value = '';
-  faceThumb.src = '';
-  facePreview.hidden = true;
-  facePromptText.hidden = false;
-});
 
 // ========================================
 // JAZZY TIMER
@@ -176,6 +135,7 @@ const adventureBtn = document.getElementById('adventureBtn');
 
 let lastCharacterImage = null;
 let characterPortraitDataUrl = null;
+let lastCharacterPersonality = null;
 
 btn.addEventListener('click', async () => {
   btn.disabled = true;
@@ -250,6 +210,7 @@ btn.addEventListener('click', async () => {
       const compImg = await compressDataUrl(data.image, 1024, 0.8);
       lastCharacterImage = { base64: compImg.base64, mimeType: compImg.mimeType };
       characterPortraitDataUrl = data.image;
+      lastCharacterPersonality = getAttrs().personality || null;
 
       meta.hidden = false;
     }
@@ -275,11 +236,17 @@ const restartBtn = document.getElementById('restartBtn');
 const gameOverRestartBtn = document.getElementById('gameOverRestartBtn');
 
 let storyData = null;
+let charsData = {};
 
 fetch('/story.json')
   .then((r) => r.json())
   .then((data) => { storyData = data; })
   .catch((err) => console.error('Failed to load story:', err));
+
+fetch('/characters.json')
+  .then((r) => r.json())
+  .then((data) => { charsData = data; })
+  .catch(() => {});
 
 adventureBtn.addEventListener('click', () => {
   if (!lastCharacterImage || !storyData) return;
@@ -349,6 +316,11 @@ async function playScene(sceneId) {
         characterImageBase64: lastCharacterImage.base64,
         characterImageMimeType: lastCharacterImage.mimeType,
         prompt: scene.prompt,
+        personality: lastCharacterPersonality,
+        secondaryCharacters: (scene.characters || [])
+          .map(key => charsData[key])
+          .filter(c => c?.imageBase64)
+          .map(c => ({ name: c.name, description: c.description, imageBase64: c.imageBase64, imageMimeType: c.imageMimeType })),
       }),
     });
 

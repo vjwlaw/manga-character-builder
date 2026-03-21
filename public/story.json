@@ -2,95 +2,118 @@
   "start": "classroom",
   "scenes": {
     "classroom": {
-      "title": "Scene 1 \u2014 Classroom",
-      "prompt": "Manga panel, Demon Slayer style. Character sitting at a desk in a crowded Japanese classroom full of other students. Other students are sitting at desks around them, a teacher is at the chalkboard. The main character looks uncomfortable, squirming slightly. High-contrast ink, screen tones. Add a speech bubble from the main character containing the EXACT text: \"I need to go to the bathroom\"",
+      "title": "ACT I — Scene 1: Something in the Air",
+      "prompt": "Manga panel. The protagonist sits at a school desk gripping the edge tightly. The classroom is normal but a heavy invisible pressure hangs in the air — shown as faint dark tendrils curling at the windows. Other students are oblivious. The protagonist sweats, eyes sharp and alert. High-contrast ink, screen tones. Add a speech bubble from the protagonist containing the EXACT text: \"Something is watching this classroom.\"",
       "choices": [
-        { "label": "Go to the bathroom", "next": "hallway" },
-        { "label": "Hold it in", "next": "gameover_holdit" },
-        { "label": "Ditch school for the day", "next": "gameover_ditch" }
+        {
+          "label": "Look under desk",
+          "next": "smurfs_attack"
+        },
+        {
+          "label": "Jump out the window",
+          "next": "falling"
+        }
       ]
     },
-    "gameover_holdit": {
-      "title": "Game Over",
-      "prompt": "Manga panel, comedic style. Character at desk sweating profusely, face bright red, dramatic speed lines radiating outward. Embarrassed expression. Add a speech bubble containing the EXACT text: \"I should have gone...\"",
+    "smurfs_attack": {
+      "title": "And the Smurfs Attack",
+      "prompt": "Manga panel, high contrast black and white. The protagonist is swarmed and overwhelmed by dozens of tiny blue-skinned creatures no taller than a hand, wearing white hats and pants, climbing all over them. The protagonist's face is pure horror. Add a speech bubble containing the EXACT text: \"Get me out of here!\"",
       "gameOver": true
     },
-    "gameover_ditch": {
-      "title": "Game Over",
-      "prompt": "Manga panel, dramatic style. Character caught sneaking out the school gate by a stern teacher blocking the exit. Heavy shadows. Add a speech bubble containing the EXACT text: \"And where do you think you're going?\"",
-      "gameOver": true
-    },
-    "hallway": {
-      "title": "Scene 2 \u2014 The Hallway",
-      "prompt": "Manga panel, Demon Slayer style. Character walking alone down a long empty school hallway with dramatic one-point perspective. Shadows stretch along the floor. Eerie atmosphere. High-contrast ink, screen tones. Add a speech bubble containing the EXACT text: \"Something feels off...\"",
+    "falling": {
+      "title": "You're falling out the window, with no ground in sight!",
+      "prompt": "Manga panel, high contrast, black and white. the protagonist is falling from a window through a white void. The protagonist looks suprised and is saying these exact words: \"What's going on...?\" there is a very small smourf in the bottom left corner, winking and making a thumbs-up. Also, there's a small house floating in the void somewhere.",
       "choices": [
-        { "label": "Keep walking", "next": "bathroom_door" },
-        { "label": "Turn back to class", "next": "mysterious_girl" },
-        { "label": "Investigate the strange noise", "next": "gameover_noise" }
+        {
+          "label": "Enter the mysterious floating house",
+          "next": "house"
+        },
+        {
+          "label": "fall MORE!",
+          "next": "smurfs_attack"
+        },
+        {
+          "label": "Break into the house instead",
+          "next": "Watch_out!"
+        }
       ]
     },
-    "mysterious_girl": {
-      "title": "Scene 2B \u2014 The Mysterious Girl",
-      "prompt": "Manga panel, Demon Slayer style. Character turns around in the hallway and a mysterious girl with long dark hair and glowing eyes is standing in the middle of the corridor, blocking the way back. She has an eerie calm smile. Dramatic shadows and backlighting. High-contrast ink, screen tones. Add a speech bubble from the girl containing the EXACT text: \"You can't go back.\"",
+    "house": {
+      "title": "You enter the house floating in the void",
+      "prompt": "Manga panel, high contrast, black and white. A friendly-looking old man opens the door of a small cottage floating in the void. He says, \"can I help you?\".",
       "choices": [
-        { "label": "Ask her who she is", "next": "girl_warning" },
-        { "label": "Push past her", "next": "gameover_pushpast" },
-        { "label": "Run toward the bathroom", "next": "bathroom_door" }
+        {
+          "label": "Ask the old man about the void",
+          "next": "old_man_1"
+        },
+        {
+          "label": "Say something else",
+          "next": "test"
+        },
+        {
+          "label": "Ask about the classroom",
+          "next": "old_times2"
+        }
+      ],
+      "characters": [
+        "Old_Man"
       ]
     },
-    "girl_warning": {
-      "title": "Scene 2C \u2014 A Warning",
-      "prompt": "Manga panel, Demon Slayer style. Close-up of the mysterious girl's face, half in shadow. She looks serious and intense. The hallway behind her is distorted and warped. High-contrast ink. Add a speech bubble containing the EXACT text: \"The door at the end... it chose you.\"",
-      "choices": [
-        { "label": "Go to the bathroom door", "next": "bathroom_door" },
-        { "label": "Refuse and try to leave", "next": "gameover_refuse" }
+    "old_man_1": {
+      "title": "The old man responds",
+      "prompt": "A kindly old man sits on an armchair, drinking a cup of tea (inside the cup is a small smorf). He says this exact text: \"I don't know why outside is only a void. Someone has been stealing reality, I think.\"",
+      "characters": [
+        "Old_Man"
       ]
     },
-    "gameover_pushpast": {
-      "title": "Game Over",
-      "prompt": "Manga panel, horror style. Character tries to push past the mysterious girl but passes right through her like a ghost. Character stumbles and falls, terrified. The girl looks back with a cold expression. Add a speech bubble containing the EXACT text: \"I warned you.\"",
-      "gameOver": true
-    },
-    "gameover_refuse": {
-      "title": "Game Over",
-      "prompt": "Manga panel, horror style. The hallway stretches infinitely in both directions. The character is trapped, walls closing in. The mysterious girl has vanished. Claustrophobic atmosphere. Add a speech bubble containing the EXACT text: \"Where did she go?! Where am I?!\"",
-      "gameOver": true
-    },
-    "gameover_noise": {
-      "title": "Game Over",
-      "prompt": "Manga panel, horror style. Character peering into a dark storage room, eyes wide with fear. A mysterious shadowy figure looms behind them. Add a speech bubble containing the EXACT text: \"I should NOT have looked...\"",
-      "gameOver": true
-    },
-    "bathroom_door": {
-      "title": "Scene 3 \u2014 The Bathroom Door",
-      "prompt": "Manga panel, Demon Slayer style. Character standing in front of a bathroom door at the end of a hallway. The door has a strange glowing aura around it. Dramatic lighting. High-contrast ink. Add a speech bubble containing the EXACT text: \"Why is it glowing...?\"",
+    "test": {
+      "title": "You say something.",
+      "prompt": "The protagonist is confused because they just fell through a void and felt like something was watching their classroom. So, they stopped by a kindly old man's house to get help. However, instead of asking about the void or the class, they say something else in accordance with their programmed personality.",
       "choices": [
-        { "label": "Open the door", "next": "portal" },
-        { "label": "Run away", "next": "gameover_runaway" }
+        {
+          "label": "Leave and come back",
+          "next": "house"
+        },
+        {
+          "label": "Wait for his response",
+          "next": "test2"
+        }
+      ],
+      "characters": [
+        "Old_Man"
       ]
     },
-    "gameover_runaway": {
-      "title": "Game Over",
-      "prompt": "Manga panel, action style. Character running down hallway but slips and falls dramatically. Speed lines everywhere. Add a speech bubble containing the EXACT text: \"My legs gave out!\"",
-      "gameOver": true
-    },
-    "portal": {
-      "title": "Scene 4 \u2014 The Portal",
-      "prompt": "Manga panel, epic fantasy style. Character opens bathroom door and is blasted by swirling magical energy. A portal to another world is visible inside. Character's hair and clothes blowing in the wind. Dramatic action lines. Add a speech bubble containing the EXACT text: \"What is this place?!\"",
+    "test2": {
+      "title": "The old man is confused.",
+      "prompt": "A kindly-looking old man sitting in an armchair in his house says: \"What are you talking about?\" He looks confused. The protagonist has a comically oversized sweat droplet on their head.",
       "choices": [
-        { "label": "Step through the portal", "next": "new_world" },
-        { "label": "Try to close the door", "next": "gameover_suckedin" }
+        {
+          "label": "Ask about the void",
+          "next": "old_man_1"
+        },
+        {
+          "label": "Ask about the classroom",
+          "next": "old_times2"
+        }
+      ],
+      "characters": [
+        "Old_Man"
       ]
     },
-    "gameover_suckedin": {
-      "title": "Game Over",
-      "prompt": "Manga panel, action style. Character trying to close the glowing door but being pulled in by a vortex. Dramatic swirl effects. Add a speech bubble containing the EXACT text: \"It's pulling me in!\"",
-      "gameOver": true
+    "Watch_out!": {
+      "title": "You've been cornered!",
+      "prompt": "The protagonist, after just having broken into a house through the window, is now backed into a corner being threatened by the old lady, who's holding a knife. The old lady says, \"Who do you think you are, breaking into our house!\" The protagonist briefly responds according to their personality.",
+      "characters": [
+        "Old_Lady"
+      ]
     },
-    "new_world": {
-      "title": "Scene 5 \u2014 A New World",
-      "prompt": "Manga panel, epic fantasy landscape. Character standing on a cliff overlooking a vast fantasy world with floating islands, a huge moon, and distant castles. Wind blowing through their hair. Awestruck expression. Add a speech bubble containing the EXACT text: \"I'm definitely not in school anymore...\"",
-      "choices": []
+    "old_times2": {
+      "title": "But he's interrupted!",
+      "prompt": "The old man, sitting in an armchair and drinking tea, says: \"well, you felt there was something wrong with the air in the classroom because--\" However, his speech balloon is interrupted by the old lady, barging into the room, who says, \"Who's this?!\" The protagonist looks surprised.",
+      "characters": [
+        "Old_Man",
+        "Old_Lady"
+      ]
     }
   }
 }

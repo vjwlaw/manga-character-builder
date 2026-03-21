@@ -1,19 +1,24 @@
 import 'dotenv/config';
 import express from 'express';
 import { GoogleGenAI } from '@google/genai';
-import { readFileSync } from 'fs';
+import { readFileSync, writeFileSync } from 'fs';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const app = express();
+
+const CHARS_PATH = join(__dirname, 'public', 'characters.json');
+function readChars() {
+  try { return JSON.parse(readFileSync(CHARS_PATH, 'utf-8')); } catch { return {}; }
+}
 app.use(express.json({ limit: '20mb' }));
 app.use(express.static(join(__dirname, 'public')));
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 
-// Cost per image for gemini-2.5-flash-image (USD)
-const COST_PER_IMAGE = 0.039;
+// Cost per image for gemini-2.5-flash-preview-04-17 (Nano Banana 2) in USD
+const COST_PER_IMAGE = 0.04;
 
 // Build a manga-style prompt from character attributes
 function buildPrompt(attrs, hasFace) {
@@ -27,7 +32,8 @@ function buildPrompt(attrs, hasFace) {
   } = attrs;
 
   return (
-    (hasFace ? `Full body manga-style illustration drawn to resemble a specific person (facial features listed below). ` : `Full body manga-style illustration. `) +
+    (hasFace ? `One single manga-style character illustration drawn to resemble a specific person (facial features listed below). ` : `One single manga-style character illustration. `) +
+    `Strictly one character only. No multiple people, no duplicates. ` +
     `High detail, black and white ink with screen tone shading. ` +
     `${gender} character, ${hairStyle} ${hairColor} hair, ` +
     `${personality} expression, wearing ${outfit}` +
@@ -75,7 +81,7 @@ app.post('/generate', async (req, res) => {
     console.log('[generate] calling image generation API...');
 
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3.1-flash-image-preview',
       contents: [{ text: finalPrompt }],
       config: {
         responseModalities: ['IMAGE'],
@@ -111,7 +117,7 @@ app.post('/generate', async (req, res) => {
 
 // Step 3: Generate a scene panel with character image and client-provided prompt
 app.post('/panel', async (req, res) => {
-  const { characterImageBase64, characterImageMimeType, prompt: scenePrompt } = req.body;
+  const { characterImageBase64, characterImageMimeType, prompt: scenePrompt, personality, secondaryCharacters } = req.body;
   const startTime = Date.now();
   console.log('[panel] generating scene panel...');
 
@@ -121,10 +127,14 @@ app.post('/panel', async (req, res) => {
 
   try {
     const result = await ai.models.generateContent({
-      model: 'gemini-2.5-flash-image',
+      model: 'gemini-3.1-flash-image-preview',
       contents: [
-        { text: scenePrompt },
+        { text: `The protagonist in this scene has the following personality — use this to inform their expression and body language: ${personality}. ${scenePrompt} Manga panel, black and white.` +
+          (secondaryCharacters?.length
+            ? ` IMPORTANT: Multiple character references are attached. Image 1 = the PROTAGONIST. ${secondaryCharacters.map((c, i) => `Image ${i + 2} = ${c.name} (${c.description})`).join('. ')}. Keep every character visually distinct and consistent with their reference image.`
+            : ' Strictly one character only.') },
         { inlineData: { mimeType: characterImageMimeType, data: characterImageBase64 } },
+        ...(secondaryCharacters || []).map(c => ({ inlineData: { mimeType: c.imageMimeType, data: c.imageBase64 } })),
       ],
       config: {
         responseModalities: ['IMAGE'],
@@ -140,6 +150,9 @@ app.post('/panel', async (req, res) => {
     const imagePart = candidate?.content?.parts?.find((p) => p.inlineData);
 
     if (!imagePart) {
+      const textPart = candidate?.content?.parts?.find((p) => p.text);
+      const finishReason = candidate?.finishReason;
+      console.error(`[panel] no image. finishReason=${finishReason} text="${textPart?.text}"`);
       return res.status(500).json({ error: 'Model refused or failed text render.', latencyMs });
     }
 
@@ -152,6 +165,112 @@ app.post('/panel', async (req, res) => {
     console.error(`[panel] ERROR:`, err.message);
     res.status(500).json({ error: err.message });
   }
+});
+
+// ── Character routes ──────────────────────────────────────────
+
+app.get('/api/characters', (req, res) => res.json(readChars()));
+
+app.post('/api/character/:key/generate', async (req, res) => {
+  const { key } = req.params;
+  const { name, description } = req.body;
+  if (!name || !description) return res.status(400).json({ error: 'name and description required' });
+  const prompt = `Manga character reference sheet, black and white ink with screen tones. Full body, white background, single character only. ${description}`;
+  try {
+    const result = await ai.models.generateContent({
+      model: 'gemini-3.1-flash-image-preview',
+      contents: [{ text: prompt }],
+      config: { responseModalities: ['IMAGE'], thinkingLevel: 'low', candidateCount: 1 },
+    });
+    const imagePart = result.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+    if (!imagePart) return res.status(500).json({ error: 'Model refused to generate image.' });
+    const chars = readChars();
+    chars[key] = { name, description, imageBase64: imagePart.inlineData.data, imageMimeType: imagePart.inlineData.mimeType };
+    res.json({ success: true, image: `data:${imagePart.inlineData.mimeType};base64,${imagePart.inlineData.data}` });
+    writeFileSync(CHARS_PATH, JSON.stringify(chars, null, 2));
+    console.log(`[chars] generated "${key}"`);
+  } catch (err) {
+    console.error('[chars] ERROR:', err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.delete('/api/character/:key', (req, res) => {
+  const { key } = req.params;
+  const chars = readChars();
+  if (!chars[key]) return res.status(404).json({ error: 'Character not found.' });
+  delete chars[key];
+  res.json({ success: true });
+  writeFileSync(CHARS_PATH, JSON.stringify(chars, null, 2));
+  console.log(`[chars] deleted "${key}"`);
+});
+
+// Update an existing scene
+app.put('/api/story/scene/:key', (req, res) => {
+  const { key } = req.params;
+  const { scene } = req.body;
+  if (!scene?.title || !scene?.prompt) {
+    return res.status(400).json({ error: 'title and prompt are required.' });
+  }
+  const storyPath = join(__dirname, 'public', 'story.json');
+  const story = JSON.parse(readFileSync(storyPath, 'utf-8'));
+  if (!story.scenes[key]) {
+    return res.status(404).json({ error: `Scene "${key}" not found.` });
+  }
+  res.json({ success: true });
+  story.scenes[key] = scene;
+  writeFileSync(storyPath, JSON.stringify(story, null, 2));
+  console.log(`[story] updated scene "${key}"`);
+});
+
+// Delete a scene
+app.delete('/api/story/scene/:key', (req, res) => {
+  const { key } = req.params;
+  const storyPath = join(__dirname, 'public', 'story.json');
+  const story = JSON.parse(readFileSync(storyPath, 'utf-8'));
+  if (!story.scenes[key]) return res.status(404).json({ error: `Scene "${key}" not found.` });
+  if (key === story.start) return res.status(400).json({ error: 'Cannot delete the start scene.' });
+  delete story.scenes[key];
+  // Remove any choices pointing to the deleted scene
+  for (const scene of Object.values(story.scenes)) {
+    if (scene.choices) scene.choices = scene.choices.filter(c => c.next !== key);
+  }
+  res.json({ success: true });
+  writeFileSync(storyPath, JSON.stringify(story, null, 2));
+  console.log(`[story] deleted scene "${key}"`);
+});
+
+// Story map page
+app.get('/story', (req, res) => {
+  res.sendFile(join(__dirname, 'public', 'story.html'));
+});
+
+// Return story.json as JSON
+app.get('/api/story', (req, res) => {
+  const story = JSON.parse(readFileSync(join(__dirname, 'public', 'story.json'), 'utf-8'));
+  res.json(story);
+});
+
+// Add a new scene to story.json
+app.post('/api/story/scene', (req, res) => {
+  const { key, scene, parentKey, choiceLabel } = req.body;
+  if (!key || !scene?.title || !scene?.prompt) {
+    return res.status(400).json({ error: 'key, title, and prompt are required.' });
+  }
+  const storyPath = join(__dirname, 'public', 'story.json');
+  const story = JSON.parse(readFileSync(storyPath, 'utf-8'));
+  if (story.scenes[key]) {
+    return res.status(400).json({ error: `Scene key "${key}" already exists.` });
+  }
+  story.scenes[key] = scene;
+  if (parentKey && choiceLabel && story.scenes[parentKey]) {
+    if (!story.scenes[parentKey].choices) story.scenes[parentKey].choices = [];
+    story.scenes[parentKey].choices.push({ label: choiceLabel, next: key });
+  }
+  // Respond before writing so node --watch restart doesn't drop the response
+  res.json({ success: true });
+  writeFileSync(storyPath, JSON.stringify(story, null, 2));
+  console.log(`[story] added scene "${key}"${parentKey ? ` (from ${parentKey})` : ''}`);
 });
 
 const PORT = process.env.PORT || 3000;

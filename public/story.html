@@ -1,0 +1,1203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Story Map</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Courier New', monospace;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Graph ─────────────────────────────────────────────── */
+    #graph-container {
+      flex: 1;
+      overflow: hidden;
+      position: relative;
+    }
+    #graph {
+      width: 100%;
+      height: 100%;
+      cursor: grab;
+    }
+    #graph:active { cursor: grabbing; }
+
+    .node rect {
+      transition: filter 0.15s;
+    }
+    .node:hover rect { filter: brightness(1.4); }
+    .node.selected rect { stroke-width: 3 !important; }
+
+    .node.normal rect   { fill: #12122a; stroke: #4a80c8; stroke-width: 1.5; }
+    .node.gameover rect { fill: #2a1212; stroke: #c84a4a; stroke-width: 1.5; }
+    .node.start rect    { fill: #122a12; stroke: #4ac84a; stroke-width: 2; }
+    .node.terminal rect { fill: #1a1a1a; stroke: #888; stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+    .node text { pointer-events: none; }
+
+    .edge { pointer-events: visibleStroke; }
+    .edge:hover path { stroke-opacity: 1 !important; }
+
+    #graph-hint {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      font-size: 13px;
+      color: #555;
+      pointer-events: none;
+    }
+
+    /* ── Side panel ─────────────────────────────────────────── */
+    #side-panel {
+      width: 480px;
+      background: #0e0e18;
+      border-left: 1px solid #222;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    #panel-tabs {
+      display: flex;
+      border-bottom: 1px solid #222;
+      flex-shrink: 0;
+    }
+    .tab-btn {
+      flex: 1;
+      padding: 13px;
+      background: none;
+      border: none;
+      color: #666;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 0.05em;
+      transition: color 0.15s, background 0.15s;
+    }
+    .tab-btn.active {
+      color: #e0e0e0;
+      background: #161622;
+      border-bottom: 2px solid #4a80c8;
+    }
+    .tab-btn:hover:not(.active) { color: #aaa; }
+
+    #tab-detail, #tab-add {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+    }
+
+    #no-selection {
+      color: #444;
+      font-size: 15px;
+      margin-top: 24px;
+      text-align: center;
+    }
+
+    /* Scene detail */
+    .scene-key {
+      font-size: 12px;
+      color: #666;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .scene-title {
+      font-size: 17px;
+      font-weight: bold;
+      color: #e0e0e0;
+      margin-bottom: 10px;
+      line-height: 1.4;
+    }
+    .gameover-badge {
+      display: inline-block;
+      font-size: 12px;
+      background: #3a1010;
+      color: #c84a4a;
+      border: 1px solid #c84a4a;
+      padding: 2px 6px;
+      margin-bottom: 10px;
+      letter-spacing: 0.1em;
+    }
+    .section-label {
+      font-size: 12px;
+      color: #555;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      margin: 16px 0 8px;
+    }
+    .prompt-text {
+      font-size: 13px;
+      color: #aaa;
+      line-height: 1.6;
+      background: #0a0a14;
+      padding: 12px;
+      border: 1px solid #1e1e3a;
+      max-height: 220px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    .choice-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 13px;
+    }
+    .choice-arrow { color: #4a80c8; flex-shrink: 0; }
+    .choice-label { color: #ccc; flex: 1; }
+    .choice-next {
+      font-size: 11px;
+      color: #555;
+      background: #111;
+      padding: 3px 7px;
+      cursor: pointer;
+      border: 1px solid #333;
+      white-space: nowrap;
+    }
+    .choice-next:hover { color: #4a80c8; border-color: #4a80c8; }
+
+    /* Add scene form */
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 6px;
+    }
+    .form-group input,
+    .form-group textarea,
+    .form-group select {
+      width: 100%;
+      background: #0a0a14;
+      border: 1px solid #222;
+      color: #e0e0e0;
+      padding: 10px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.15s;
+    }
+    .form-group input:focus,
+    .form-group textarea:focus,
+    .form-group select:focus { border-color: #4a80c8; }
+    .form-group textarea { resize: vertical; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .checkbox-row input { width: auto; transform: scale(1.3); }
+    .checkbox-row label {
+      font-size: 14px;
+      color: #aaa;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    #choices-list { margin-bottom: 10px; }
+    .choice-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+    .choice-row input { flex: 1; font-size: 13px; }
+    .remove-choice {
+      background: none;
+      border: 1px solid #333;
+      color: #666;
+      cursor: pointer;
+      padding: 6px 10px;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .remove-choice:hover { color: #c84a4a; border-color: #c84a4a; }
+
+    .btn-secondary {
+      background: none;
+      border: 1px solid #333;
+      color: #888;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      margin-bottom: 16px;
+    }
+    .btn-secondary:hover { border-color: #4a80c8; color: #4a80c8; }
+
+    .btn-edit {
+      display: block;
+      width: 100%;
+      margin-top: 20px;
+      background: none;
+      border: 1px solid #4a80c8;
+      color: #4a80c8;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-edit:hover { background: #1a2a4a; color: #c0d8ff; }
+
+    .btn-delete {
+      display: block;
+      width: 100%;
+      margin-top: 8px;
+      background: none;
+      border: 1px solid #c84a4a;
+      color: #c84a4a;
+      padding: 10px;
+      font-family: inherit;
+      font-size: 13px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      transition: background 0.15s, color 0.15s;
+    }
+    .btn-delete:hover { background: #3a1010; color: #ff8080; }
+
+    #f-key-display {
+      font-size: 14px;
+      color: #888;
+      padding: 10px 12px;
+      background: #060610;
+      border: 1px solid #1a1a2a;
+      width: 100%;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #1a2a4a;
+      border: 1px solid #4a80c8;
+      color: #c0d8ff;
+      padding: 12px;
+      font-family: inherit;
+      font-size: 14px;
+      cursor: pointer;
+      letter-spacing: 0.08em;
+      margin-top: 4px;
+      transition: background 0.15s;
+    }
+    .btn-primary:hover { background: #22366a; }
+    .btn-primary:disabled { opacity: 0.4; cursor: default; }
+
+    .form-divider {
+      border: none;
+      border-top: 1px solid #1e1e1e;
+      margin: 16px 0;
+    }
+
+    #form-status {
+      font-size: 13px;
+      margin-top: 10px;
+      padding: 8px 10px;
+      display: none;
+    }
+    #form-status.success { background: #0a2a0a; color: #4ac84a; border: 1px solid #2a5a2a; }
+    #form-status.error   { background: #2a0a0a; color: #c84a4a; border: 1px solid #5a2a2a; }
+
+    /* Character cards */
+    .char-card {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 12px 0;
+      border-bottom: 1px solid #1a1a2a;
+    }
+    .char-thumb {
+      width: 64px;
+      height: 64px;
+      object-fit: cover;
+      border: 1px solid #333;
+      flex-shrink: 0;
+      background: #111;
+    }
+    .char-thumb-placeholder {
+      width: 64px;
+      height: 64px;
+      border: 1px dashed #333;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      color: #444;
+    }
+    .char-info { flex: 1; min-width: 0; }
+    .char-name { font-size: 13px; font-weight: bold; color: #ddd; margin-bottom: 3px; }
+    .char-desc { font-size: 11px; color: #666; margin-bottom: 8px; line-height: 1.4; }
+    .char-actions { display: flex; gap: 6px; }
+    .char-actions button {
+      background: none;
+      border: 1px solid #333;
+      color: #777;
+      font-family: inherit;
+      font-size: 11px;
+      padding: 3px 8px;
+      cursor: pointer;
+    }
+    .char-actions button:hover { border-color: #4a80c8; color: #4a80c8; }
+    .char-actions .btn-danger:hover { border-color: #c84a4a; color: #c84a4a; }
+
+    #add-char-form { margin-top: 16px; }
+    #cc-status { font-size: 12px; margin-top: 8px; padding: 6px 8px; display: none; }
+    #cc-status.success { background: #0a2a0a; color: #4ac84a; border: 1px solid #2a5a2a; }
+    #cc-status.error   { background: #2a0a0a; color: #c84a4a; border: 1px solid #5a2a2a; }
+    #cc-status.loading {
+      background: #0a0a18;
+      border: 1px solid #2a2a4a;
+      text-align: center;
+      padding: 16px 8px;
+    }
+    #cc-status.loading .cc-spinner {
+      font-size: 22px;
+      letter-spacing: 0.15em;
+      color: #4a80c8;
+      display: block;
+      margin-bottom: 6px;
+    }
+    #cc-status.loading .cc-timer { font-size: 13px; color: #888; }
+    #cc-status.loading .cc-label { font-size: 11px; color: #555; margin-top: 4px; }
+
+    /* Preview modal */
+    #char-preview-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+    #char-preview-modal.open { display: flex; }
+    #char-preview-modal img {
+      max-width: 90vw;
+      max-height: 90vh;
+      border: 2px solid #333;
+      display: block;
+    }
+    #char-preview-name {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 14px;
+      color: #aaa;
+      background: rgba(0,0,0,0.7);
+      padding: 6px 16px;
+      pointer-events: none;
+    }
+
+    .chars-in-scene { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+    .char-scene-toggle {
+      font-family: inherit;
+      font-size: 12px;
+      padding: 4px 10px;
+      cursor: pointer;
+      background: none;
+      border: 1px solid #333;
+      color: #666;
+      transition: all 0.15s;
+    }
+    .char-scene-toggle:hover { border-color: #4a80c8; color: #aaa; }
+    .char-scene-toggle.char-active { background: #1a2a4a; border-color: #4a80c8; color: #c0d8ff; }
+
+    .char-tag {
+      font-size: 11px;
+      background: #1a1a2e;
+      border: 1px solid #4a80c8;
+      color: #aac4ff;
+      padding: 2px 8px;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #2a2a3a; }
+  </style>
+</head>
+<body>
+
+<div id="graph-container">
+  <svg id="graph">
+    <defs>
+      <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5"
+        markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#3a6aaa"/>
+      </marker>
+      <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5"
+        markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#8a3a3a"/>
+      </marker>
+      <marker id="arrow-grey" viewBox="0 0 10 10" refX="9" refY="5"
+        markerWidth="5" markerHeight="5" orient="auto">
+        <path d="M 0 0 L 10 5 L 0 10 z" fill="#555"/>
+      </marker>
+    </defs>
+    <g id="zoom-group">
+      <g id="edges"></g>
+      <g id="nodes"></g>
+    </g>
+  </svg>
+  <div id="graph-hint">scroll to zoom · drag to pan · click node for details</div>
+</div>
+
+<div id="side-panel">
+  <div id="panel-tabs">
+    <button class="tab-btn active" onclick="switchTab('detail')">Scene</button>
+    <button class="tab-btn" onclick="switchTab('chars')">Characters</button>
+    <button class="tab-btn" onclick="setFormMode('add'); switchTab('add')">+ Add Scene</button>
+  </div>
+
+  <div id="tab-detail">
+    <div id="no-selection">Click a scene node to view details.</div>
+    <div id="scene-info" style="display:none"></div>
+  </div>
+
+  <div id="tab-chars" style="display:none">
+    <div id="chars-list"></div>
+    <button class="btn-secondary" style="margin-top:12px" onclick="toggleAddCharForm()">+ Add Character</button>
+    <div id="add-char-form" style="display:none">
+      <hr class="form-divider">
+      <div class="form-group">
+        <label>Character Key</label>
+        <input id="cc-key" type="text" placeholder="e.g. old_man">
+      </div>
+      <div class="form-group">
+        <label>Name</label>
+        <input id="cc-name" type="text" placeholder="e.g. The Old Man">
+      </div>
+      <div class="form-group">
+        <label>Appearance Description</label>
+        <textarea id="cc-desc" rows="4" placeholder="Elderly Japanese man, white hair, wire-rimmed round glasses, kind wrinkled face, wearing a light grey yukata..."></textarea>
+      </div>
+      <button class="btn-primary" id="cc-generate-btn" onclick="generateCharacter()">Generate Reference Image</button>
+      <div id="cc-status"></div>
+    </div>
+  </div>
+
+  <div id="tab-add" style="display:none">
+    <form id="add-form" onsubmit="submitScene(event)">
+      <div class="form-group">
+        <label id="f-key-label">Scene Key</label>
+        <input id="f-key" type="text" placeholder="e.g. soul_society_gate" required>
+        <div id="f-key-display" style="display:none"></div>
+      </div>
+      <div class="form-group">
+        <label>Title</label>
+        <input id="f-title" type="text" placeholder="ACT III — Scene 2: ..." required>
+      </div>
+      <div class="form-group">
+        <label>Prompt</label>
+        <textarea id="f-prompt" rows="7" placeholder="Manga panel, Demon Slayer style. ..." required></textarea>
+      </div>
+      <div class="checkbox-row">
+        <input id="f-gameover" type="checkbox" onchange="toggleGameOver()">
+        <label for="f-gameover">Game Over scene</label>
+      </div>
+
+      <div id="choices-section">
+        <div class="section-label">Choices</div>
+        <div id="choices-list"></div>
+        <button type="button" class="btn-secondary" onclick="addChoiceRow()">+ Add Choice</button>
+      </div>
+
+      <hr class="form-divider" id="parent-divider">
+
+      <div class="form-group" id="parent-group">
+        <label>Add choice to parent scene (optional)</label>
+        <select id="f-parent">
+          <option value="">— none —</option>
+        </select>
+      </div>
+      <div id="f-choice-label-group" style="display:none" class="form-group">
+        <label>Choice label in parent</label>
+        <input id="f-choice-label" type="text" placeholder="e.g. Enter Soul Society now">
+      </div>
+
+      <div class="form-group" id="scene-chars-group">
+        <label>Secondary Characters in Scene</label>
+        <div id="scene-chars-list" style="display:flex;flex-wrap:wrap;gap:6px;min-height:30px;"></div>
+        <div style="font-size:11px;color:#555;margin-top:4px;">Click characters to toggle them in this scene.</div>
+      </div>
+
+      <button type="submit" class="btn-primary" id="submit-btn">Add Scene to Story</button>
+      <div id="form-status"></div>
+    </form>
+  </div>
+</div>
+
+<div id="char-preview-modal" onclick="closePreview()">
+  <img id="char-preview-img" src="" alt="">
+  <div id="char-preview-name"></div>
+</div>
+
+<script>
+const NODE_W = 210;
+const NODE_H = 80;
+const COL_W  = 270;
+const ROW_H  = 100;
+
+let storyData   = null;
+let charsData   = {};
+let selectedKey = null;
+let positions   = {};
+
+// ── Text wrapping ─────────────────────────────────────────────
+function wrapText(text, maxChars = 26) {
+  const words = text.split(' ');
+  const lines = [];
+  let cur = '';
+  for (const word of words) {
+    const test = cur ? `${cur} ${word}` : word;
+    if (test.length <= maxChars) {
+      cur = test;
+    } else {
+      if (cur) lines.push(cur);
+      cur = word.length > maxChars ? word.slice(0, maxChars - 1) + '…' : word;
+      if (lines.length === 2) { lines.push(cur); cur = ''; break; }
+    }
+  }
+  if (cur && lines.length < 3) lines.push(cur);
+  return lines;
+}
+
+// ── Tab switching ─────────────────────────────────────────────
+function switchTab(tab) {
+  const tabs = ['detail', 'chars', 'add'];
+  document.querySelectorAll('.tab-btn').forEach((b, i) => b.classList.toggle('active', tabs[i] === tab));
+  document.getElementById('tab-detail').style.display = tab === 'detail' ? 'block' : 'none';
+  document.getElementById('tab-chars').style.display  = tab === 'chars'  ? 'block' : 'none';
+  document.getElementById('tab-add').style.display    = tab === 'add'    ? 'block' : 'none';
+  if (tab === 'chars') renderCharsList();
+}
+
+// ── Layout ────────────────────────────────────────────────────
+function computeLayout(story) {
+  const depths = {};
+  const queue = [story.start];
+  depths[story.start] = 0;
+
+  while (queue.length) {
+    const key = queue.shift();
+    const scene = story.scenes[key];
+    if (!scene?.choices) continue;
+    for (const c of scene.choices) {
+      if (c.next in story.scenes && !(c.next in depths)) {
+        depths[c.next] = depths[key] + 1;
+        queue.push(c.next);
+      }
+    }
+  }
+
+  // Orphan nodes — place just after the deepest reachable scene
+  const maxDepth = Math.max(0, ...Object.values(depths));
+  for (const key of Object.keys(story.scenes)) {
+    if (!(key in depths)) depths[key] = maxDepth + 1;
+  }
+
+  // Group by depth
+  const byDepth = {};
+  for (const [key, d] of Object.entries(depths)) {
+    (byDepth[d] = byDepth[d] || []).push(key);
+  }
+
+  // Sort: start first, game-overs last
+  for (const keys of Object.values(byDepth)) {
+    keys.sort((a, b) => {
+      if (a === story.start) return -1;
+      if (b === story.start) return 1;
+      const ag = story.scenes[a]?.gameOver ? 1 : 0;
+      const bg = story.scenes[b]?.gameOver ? 1 : 0;
+      return ag - bg;
+    });
+  }
+
+  // Only set positions for new keys; preserve dragged positions
+  for (const [depth, keys] of Object.entries(byDepth)) {
+    keys.forEach((key, i) => {
+      if (!positions[key]) {
+        positions[key] = { x: Number(depth) * COL_W, y: i * ROW_H };
+      }
+    });
+  }
+  // Remove positions for deleted scenes
+  for (const key of Object.keys(positions)) {
+    if (!story.scenes[key]) delete positions[key];
+  }
+}
+
+// ── Render edges only (called on drag too) ────────────────────
+function renderEdges(story) {
+  const edgesG = d3.select('#edges');
+  edgesG.selectAll('*').remove();
+
+  for (const [srcKey, scene] of Object.entries(story.scenes)) {
+    if (!scene.choices) continue;
+    const src = positions[srcKey];
+    if (!src) continue;
+    const n = scene.choices.length;
+
+    scene.choices.forEach((choice, idx) => {
+      const dst = positions[choice.next];
+      if (!dst) return;
+
+      const isGameover = !!story.scenes[choice.next]?.gameOver;
+      const color  = isGameover ? '#8a3a3a' : '#2a5a8a';
+      const marker = isGameover ? 'url(#arrow-red)' : 'url(#arrow-blue)';
+
+      const x1 = src.x + NODE_W;
+      const y1 = src.y + NODE_H / 2 + (idx - (n - 1) / 2) * 10;
+      const x2 = dst.x;
+      const y2 = dst.y + NODE_H / 2;
+      const mx = (x1 + x2) / 2;
+
+      const eg = edgesG.append('g').attr('class', 'edge');
+      eg.append('path')
+        .attr('d', `M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}`)
+        .attr('stroke', color)
+        .attr('stroke-width', 1.5)
+        .attr('stroke-opacity', 0.55)
+        .attr('fill', 'none')
+        .attr('marker-end', marker);
+      eg.append('title').text(choice.label);
+    });
+  }
+}
+
+// ── Render graph ──────────────────────────────────────────────
+function renderGraph(story) {
+  renderEdges(story);
+
+  const nodesG = d3.select('#nodes');
+  nodesG.selectAll('*').remove();
+
+  const drag = d3.drag()
+    .on('start', function(event) {
+      event.sourceEvent.stopPropagation();
+      d3.select(this).raise();
+    })
+    .on('drag', function(event) {
+      const key = d3.select(this).attr('data-key');
+      positions[key].x += event.dx;
+      positions[key].y += event.dy;
+      d3.select(this).attr('transform', `translate(${positions[key].x},${positions[key].y})`);
+      renderEdges(story);
+    });
+
+  for (const [key, scene] of Object.entries(story.scenes)) {
+    const pos = positions[key];
+    if (!pos) continue;
+
+    const cls = key === story.start ? 'start' : scene.gameOver ? 'gameover' : 'normal';
+    const titleLines = wrapText(scene.title || key);
+    const nodeH = Math.max(NODE_H, 28 + titleLines.length * 15 + 18);
+
+    const node = nodesG.append('g')
+      .attr('class', `node ${cls}`)
+      .attr('data-key', key)
+      .attr('transform', `translate(${pos.x},${pos.y})`)
+      .style('cursor', 'grab')
+      .call(drag)
+      .on('click', () => selectNode(key));
+
+    node.append('rect')
+      .attr('width', NODE_W)
+      .attr('height', nodeH)
+      .attr('rx', 5);
+
+    // Scene key
+    node.append('text')
+      .attr('x', NODE_W / 2)
+      .attr('y', 14)
+      .attr('text-anchor', 'middle')
+      .attr('font-size', 9)
+      .attr('fill', '#555')
+      .text(key.length > 30 ? key.slice(0, 28) + '…' : key);
+
+    // Title lines
+    titleLines.forEach((line, i) => {
+      node.append('text')
+        .attr('x', NODE_W / 2)
+        .attr('y', 28 + i * 15)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', 11)
+        .attr('fill', '#ddd')
+        .text(line);
+    });
+
+    // Badge
+    const badgeY = 28 + titleLines.length * 15 + 4;
+    if (scene.gameOver) {
+      node.append('text')
+        .attr('x', NODE_W / 2).attr('y', badgeY)
+        .attr('text-anchor', 'middle').attr('font-size', 9)
+        .attr('fill', '#c84a4a').attr('letter-spacing', '0.08em')
+        .text('GAME OVER');
+    } else if (!scene.choices || scene.choices.length === 0) {
+      node.append('text')
+        .attr('x', NODE_W / 2).attr('y', badgeY)
+        .attr('text-anchor', 'middle').attr('font-size', 9)
+        .attr('fill', '#777')
+        .text('TO BE CONTINUED');
+    }
+  }
+}
+
+// ── Zoom ──────────────────────────────────────────────────────
+function setupZoom() {
+  const svg = d3.select('#graph');
+  const g = svg.select('#zoom-group');
+
+  const zoom = d3.zoom()
+    .scaleExtent([0.08, 2.5])
+    .on('zoom', e => g.attr('transform', e.transform));
+
+  svg.call(zoom);
+
+  // Fit graph to view
+  setTimeout(() => {
+    const bbox = g.node().getBBox();
+    if (!bbox.width || !bbox.height) return;
+    const svgEl = svg.node();
+    const W = svgEl.clientWidth;
+    const H = svgEl.clientHeight;
+    const pad = 60;
+    const scale = Math.min((W - pad * 2) / bbox.width, (H - pad * 2) / bbox.height, 1);
+    const tx = (W - bbox.width * scale) / 2 - bbox.x * scale;
+    const ty = (H - bbox.height * scale) / 2 - bbox.y * scale;
+    svg.call(zoom.transform, d3.zoomIdentity.translate(tx, ty).scale(scale));
+  }, 60);
+}
+
+// ── Node selection / detail panel ─────────────────────────────
+function selectNode(key) {
+  selectedKey = key;
+  // Update visual selection
+  d3.selectAll('.node').classed('selected', d => false);
+  d3.select(`.node[data-key="${key}"]`).classed('selected', true);
+  showSceneDetail(key);
+  switchTab('detail');
+}
+
+function showSceneDetail(key) {
+  const scene = storyData.scenes[key];
+  if (!scene) return;
+
+  document.getElementById('no-selection').style.display = 'none';
+  const info = document.getElementById('scene-info');
+  info.style.display = 'block';
+
+  const choices = scene.choices || [];
+  const choicesHtml = choices.length
+    ? choices.map(c => `
+        <div class="choice-item">
+          <span class="choice-arrow">→</span>
+          <span class="choice-label">${esc(c.label)}</span>
+          <span class="choice-next" onclick="selectNode('${c.next}')" title="Go to ${c.next}">${esc(c.next)}</span>
+        </div>`).join('')
+    : `<div style="color:#555;font-size:11px">${scene.gameOver ? 'Dead end.' : 'No choices yet.'}</div>`;
+
+  info.innerHTML = `
+    <div class="scene-key">${esc(key)}</div>
+    <div class="scene-title">${esc(scene.title || key)}</div>
+    ${scene.gameOver ? '<div class="gameover-badge">GAME OVER</div>' : ''}
+    <div class="section-label">Prompt</div>
+    <div class="prompt-text">${esc(scene.prompt || '')}</div>
+    <div class="section-label">Choices (${choices.length})</div>
+    ${choicesHtml}
+    <div class="section-label">Characters in Scene</div>
+    <div class="chars-in-scene" id="scene-detail-chars">
+      ${Object.keys(charsData).length
+        ? Object.entries(charsData).map(([cKey, c]) => {
+            const active = (scene.characters || []).includes(cKey);
+            return `<button class="char-scene-toggle ${active ? 'char-active' : ''}" data-scene="${esc(key)}" data-char="${esc(cKey)}" onclick="toggleCharInScene('${esc(key)}','${esc(cKey)}')">${esc(c.name)}</button>`;
+          }).join('')
+        : '<span style="color:#444;font-size:11px">No characters defined yet.</span>'}
+    </div>
+    <button class="btn-edit" onclick="openEditForm('${esc(key)}')">Edit Scene</button>
+    <button class="btn-delete" onclick="deleteScene('${esc(key)}')">Delete Scene</button>
+  `;
+}
+
+async function toggleCharInScene(sceneKey, charKey) {
+  const scene = storyData.scenes[sceneKey];
+  if (!scene) return;
+  const chars = scene.characters ? [...scene.characters] : [];
+  const idx = chars.indexOf(charKey);
+  if (idx === -1) chars.push(charKey); else chars.splice(idx, 1);
+  const updatedScene = { ...scene, characters: chars.length ? chars : undefined };
+  if (!updatedScene.characters) delete updatedScene.characters;
+  const res = await fetch(`/api/story/scene/${encodeURIComponent(sceneKey)}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ scene: updatedScene }),
+  });
+  if (!res.ok) { alert((await res.json()).error); return; }
+  storyData.scenes[sceneKey] = updatedScene;
+  // Update button state without full re-render
+  const btn = document.querySelector(`.char-scene-toggle[data-scene="${sceneKey}"][data-char="${charKey}"]`);
+  if (btn) btn.classList.toggle('char-active', idx === -1);
+}
+
+async function deleteScene(key) {
+  if (!confirm(`Delete scene "${key}"? Any choices pointing to it will also be removed.`)) return;
+  const res = await fetch(`/api/story/scene/${encodeURIComponent(key)}`, { method: 'DELETE' });
+  const data = await res.json();
+  if (!res.ok) { alert(data.error); return; }
+  selectedKey = null;
+  document.getElementById('scene-info').style.display = 'none';
+  document.getElementById('no-selection').style.display = 'block';
+  delete positions[key];
+  await loadAndRender();
+  populateParentDropdown(storyData);
+}
+
+function esc(str) {
+  return String(str)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+}
+
+// ── Add / Edit Scene form ─────────────────────────────────────
+let editMode = false; // false = add, true = edit
+
+function setFormMode(mode) {
+  editMode = (mode === 'edit');
+  const keyInput   = document.getElementById('f-key');
+  const keyDisplay = document.getElementById('f-key-display');
+  const parentDiv  = document.getElementById('parent-group');
+  const parentHr   = document.getElementById('parent-divider');
+  const submitBtn  = document.getElementById('submit-btn');
+  const tabBtn     = document.querySelectorAll('.tab-btn')[2];
+
+  if (editMode) {
+    keyInput.style.display   = 'none';
+    keyDisplay.style.display = 'block';
+    keyInput.removeAttribute('required');
+    parentDiv.style.display  = 'none';
+    parentHr.style.display   = 'none';
+    submitBtn.textContent    = 'Save Changes';
+    tabBtn.textContent       = '✎ Edit Scene';
+  } else {
+    keyInput.style.display   = 'block';
+    keyDisplay.style.display = 'none';
+    keyInput.setAttribute('required', '');
+    parentDiv.style.display  = 'block';
+    parentHr.style.display   = 'block';
+    submitBtn.textContent    = 'Add Scene to Story';
+    tabBtn.textContent       = '+ Add Scene';
+  }
+}
+
+function openEditForm(key) {
+  const scene = storyData.scenes[key];
+  if (!scene) return;
+
+  document.getElementById('f-key').value        = key;
+  document.getElementById('f-key-display').textContent = key;
+  document.getElementById('f-title').value      = scene.title || '';
+  document.getElementById('f-prompt').value     = scene.prompt || '';
+  document.getElementById('f-gameover').checked = !!scene.gameOver;
+
+  document.getElementById('choices-list').innerHTML = '';
+  if (!scene.gameOver) {
+    (scene.choices || []).forEach(c => addChoiceRow(c.label, c.next));
+  }
+  toggleGameOver();
+
+  document.getElementById('f-parent').value = '';
+  document.getElementById('f-choice-label').value = '';
+  document.getElementById('f-choice-label-group').style.display = 'none';
+  document.getElementById('form-status').style.display = 'none';
+
+  populateSceneChars(scene.characters || []);
+  setFormMode('edit');
+  switchTab('add');
+}
+
+function toggleGameOver() {
+  const isGO = document.getElementById('f-gameover').checked;
+  document.getElementById('choices-section').style.display = isGO ? 'none' : 'block';
+}
+
+function addChoiceRow(label = '', next = '') {
+  const list = document.getElementById('choices-list');
+  const row = document.createElement('div');
+  row.className = 'choice-row';
+
+  const sceneKeys = Object.keys(storyData?.scenes || {}).sort();
+  const options = sceneKeys.map(k =>
+    `<option value="${esc(k)}" ${k === next ? 'selected' : ''}>${esc(k)}</option>`
+  ).join('');
+
+  row.innerHTML = `
+    <input type="text" placeholder="Choice label" value="${esc(label)}" class="c-label">
+    <select class="c-next">
+      <option value="">— pick scene —</option>
+      ${options}
+    </select>
+    <button type="button" class="remove-choice" onclick="this.parentElement.remove()">✕</button>
+  `;
+  list.appendChild(row);
+}
+
+function populateParentDropdown(story) {
+  const sel = document.getElementById('f-parent');
+  sel.innerHTML = '<option value="">— none —</option>';
+  for (const [key, scene] of Object.entries(story.scenes)) {
+    const opt = document.createElement('option');
+    opt.value = key;
+    opt.textContent = `${key}  —  ${(scene.title || '').slice(0, 40)}`;
+    sel.appendChild(opt);
+  }
+  sel.onchange = () => {
+    document.getElementById('f-choice-label-group').style.display =
+      sel.value ? 'block' : 'none';
+  };
+}
+
+async function submitScene(e) {
+  e.preventDefault();
+  const btn = document.getElementById('submit-btn');
+  const status = document.getElementById('form-status');
+  status.style.display = 'none';
+
+  const key     = document.getElementById('f-key').value.trim();
+  const title   = document.getElementById('f-title').value.trim();
+  const prompt  = document.getElementById('f-prompt').value.trim();
+  const gameOver = document.getElementById('f-gameover').checked;
+  const parentKey  = document.getElementById('f-parent').value;
+  const choiceLabel = document.getElementById('f-choice-label').value.trim();
+
+  // Collect choices
+  const choiceRows = document.querySelectorAll('.choice-row');
+  const choices = [];
+  for (const row of choiceRows) {
+    const lbl  = row.querySelector('.c-label').value.trim();
+    const next = row.querySelector('.c-next').value.trim();
+    if (lbl && next) choices.push({ label: lbl, next });
+  }
+
+  const sceneChars = [...document.querySelectorAll('.scene-char-toggle.active')].map(b => b.dataset.key);
+
+  const scene = { title, prompt };
+  if (gameOver) scene.gameOver = true;
+  if (!gameOver && choices.length) scene.choices = choices;
+  if (sceneChars.length) scene.characters = sceneChars;
+
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+
+  try {
+    const url    = editMode ? `/api/story/scene/${encodeURIComponent(key)}` : '/api/story/scene';
+    const method = editMode ? 'PUT' : 'POST';
+    const body   = editMode
+      ? { scene }
+      : { key, scene, parentKey: parentKey || null, choiceLabel: choiceLabel || null };
+
+    const res = await fetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unknown error');
+
+    status.textContent = editMode ? `Scene "${key}" updated.` : `Scene "${key}" added successfully.`;
+    status.className = 'success';
+    status.style.display = 'block';
+    if (!editMode) {
+      document.getElementById('add-form').reset();
+      document.getElementById('choices-list').innerHTML = '';
+      document.getElementById('choices-section').style.display = 'block';
+      document.getElementById('f-choice-label-group').style.display = 'none';
+      populateSceneChars([]);
+    }
+    setFormMode('add');
+
+    // Reload graph
+    await loadAndRender();
+    populateParentDropdown(storyData);
+  } catch (err) {
+    status.textContent = `Error: ${err.message}`;
+    status.className = 'error';
+    status.style.display = 'block';
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Add Scene to Story';
+  }
+}
+
+// ── Characters ────────────────────────────────────────────────
+function renderCharsList() {
+  const el = document.getElementById('chars-list');
+  const keys = Object.keys(charsData);
+  if (!keys.length) { el.innerHTML = '<div style="color:#444;font-size:13px;margin:12px 0">No characters yet.</div>'; return; }
+  el.innerHTML = keys.map(key => {
+    const c = charsData[key];
+    const thumb = c.imageBase64
+      ? `<img class="char-thumb" src="data:${c.imageMimeType};base64,${c.imageBase64}" style="cursor:zoom-in" onclick="openPreview('${esc(key)}')" title="Click to preview">`
+      : `<div class="char-thumb-placeholder">no image</div>`;
+    return `<div class="char-card">
+      ${thumb}
+      <div class="char-info">
+        <div class="char-name">${esc(c.name)} <span style="color:#555;font-size:10px">(${esc(key)})</span></div>
+        <div class="char-desc">${esc(c.description)}</div>
+        <div class="char-actions">
+          <button onclick="regenCharacter('${esc(key)}')">Regenerate</button>
+          <button class="btn-danger" onclick="deleteCharacter('${esc(key)}')">Delete</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function openPreview(key) {
+  const c = charsData[key];
+  if (!c?.imageBase64) return;
+  document.getElementById('char-preview-img').src = `data:${c.imageMimeType};base64,${c.imageBase64}`;
+  document.getElementById('char-preview-name').textContent = c.name;
+  document.getElementById('char-preview-modal').classList.add('open');
+}
+
+function closePreview() {
+  document.getElementById('char-preview-modal').classList.remove('open');
+}
+
+function populateSceneChars(selected = []) {
+  const container = document.getElementById('scene-chars-list');
+  const keys = Object.keys(charsData);
+  if (!keys.length) { container.innerHTML = '<span style="color:#444;font-size:11px">No characters defined yet.</span>'; return; }
+  container.innerHTML = keys.map(key => {
+    const active = selected.includes(key) ? 'active' : '';
+    return `<button type="button" class="scene-char-toggle ${active}" data-key="${esc(key)}"
+      onclick="this.classList.toggle('active')"
+      style="background:${active ? '#1a2a4a' : 'none'};border:1px solid ${active ? '#4a80c8' : '#333'};color:${active ? '#c0d8ff' : '#777'};font-family:inherit;font-size:12px;padding:4px 10px;cursor:pointer;">
+      ${esc(charsData[key].name)}
+    </button>`;
+  }).join('');
+}
+
+function toggleAddCharForm() {
+  const f = document.getElementById('add-char-form');
+  f.style.display = f.style.display === 'none' ? 'block' : 'none';
+}
+
+async function generateCharacter() {
+  const key  = document.getElementById('cc-key').value.trim();
+  const name = document.getElementById('cc-name').value.trim();
+  const desc = document.getElementById('cc-desc').value.trim();
+  const status = document.getElementById('cc-status');
+  const btn  = document.getElementById('cc-generate-btn');
+  if (!key || !name || !desc) {
+    status.textContent = 'Key, name, and description are required.';
+    status.className = 'error'; status.style.display = 'block'; return;
+  }
+
+  btn.disabled = true; btn.textContent = 'Generating…';
+  const spinFrames = ['▰▱▱▱▱', '▰▰▱▱▱', '▰▰▰▱▱', '▰▰▰▰▱', '▰▰▰▰▰', '▱▰▰▰▰', '▱▱▰▰▰', '▱▱▱▰▰', '▱▱▱▱▰', '▱▱▱▱▱'];
+  const labels = ['Sketching character…', 'Inking lines…', 'Applying screen tones…', 'Adding shadows…', 'Finalizing details…'];
+  let frame = 0, labelIdx = 0;
+  const start = Date.now();
+
+  status.className = 'loading'; status.style.display = 'block';
+  status.innerHTML = `<span class="cc-spinner">${spinFrames[0]}</span><div class="cc-timer">00:00</div><div class="cc-label">${labels[0]}</div>`;
+
+  const interval = setInterval(() => {
+    frame++;
+    const elapsed = Math.floor((Date.now() - start) / 1000);
+    const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+    const s = String(elapsed % 60).padStart(2, '0');
+    if (elapsed % 5 === 0 && elapsed > 0) labelIdx = (labelIdx + 1) % labels.length;
+    status.innerHTML = `<span class="cc-spinner">${spinFrames[frame % spinFrames.length]}</span><div class="cc-timer">${m}:${s}</div><div class="cc-label">${labels[labelIdx]}</div>`;
+  }, 500);
+
+  try {
+    const res = await fetch(`/api/character/${encodeURIComponent(key)}/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, description: desc }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    charsData = await fetch('/api/characters').then(r => r.json());
+    status.className = 'success'; status.innerHTML = `Character "${esc(name)}" generated. Click the thumbnail to preview.`;
+    document.getElementById('cc-key').value = '';
+    document.getElementById('cc-name').value = '';
+    document.getElementById('cc-desc').value = '';
+    document.getElementById('add-char-form').style.display = 'none';
+    renderCharsList();
+  } catch (err) {
+    status.className = 'error'; status.innerHTML = `Error: ${esc(err.message)}`;
+  } finally {
+    clearInterval(interval);
+    btn.disabled = false; btn.textContent = 'Generate Reference Image';
+  }
+}
+
+async function regenCharacter(key) {
+  const c = charsData[key];
+  if (!c) return;
+  const btn = document.querySelector(`.char-card [onclick="regenCharacter('${key}')"]`);
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  try {
+    const res = await fetch(`/api/character/${encodeURIComponent(key)}/generate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name: c.name, description: c.description }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+    charsData = await fetch('/api/characters').then(r => r.json());
+    renderCharsList();
+  } catch (err) { alert(err.message); }
+}
+
+async function deleteCharacter(key) {
+  if (!confirm(`Delete character "${charsData[key]?.name}"?`)) return;
+  const res = await fetch(`/api/character/${encodeURIComponent(key)}`, { method: 'DELETE' });
+  if (!res.ok) { alert((await res.json()).error); return; }
+  charsData = await fetch('/api/characters').then(r => r.json());
+  renderCharsList();
+}
+
+// ── Init ──────────────────────────────────────────────────────
+async function loadAndRender() {
+  [storyData, charsData] = await Promise.all([
+    fetch('/api/story').then(r => r.json()),
+    fetch('/api/characters').then(r => r.json()),
+  ]);
+  computeLayout(storyData);
+  renderGraph(storyData);
+  if (selectedKey && storyData.scenes[selectedKey]) {
+    d3.select(`.node[data-key="${selectedKey}"]`).classed('selected', true);
+  }
+}
+
+async function init() {
+  await loadAndRender();
+  setupZoom();
+  populateParentDropdown(storyData);
+  populateSceneChars([]);
+  addChoiceRow();
+}
+
+init();
+</script>
+</body>
+</html>
